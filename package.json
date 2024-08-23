@@ -13,7 +13,6 @@
     "@material-tailwind/react": "^2.1.9",
     "@supabase/supabase-js": "^2.45.1",
     "apexcharts": "3.44.0",
-    "canvas": "^2.11.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "lucide-react": "^0.427.0",
