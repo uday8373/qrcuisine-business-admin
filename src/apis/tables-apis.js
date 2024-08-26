@@ -239,7 +239,7 @@ async function generateQRTemplateImage(table_no, qr_code) {
 }
 
 async function generateQRCode(restaurantId, tableId) {
-  const url = `https://tableqr.vercel.app/${restaurantId}/${tableId}`;
+  const url = `https://qrcuisine.com/${restaurantId}/${tableId}`;
   try {
     const qrCodeDataURL = await QRCode.toDataURL(url);
     return qrCodeDataURL;
