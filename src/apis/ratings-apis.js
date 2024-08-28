@@ -11,8 +11,6 @@ export async function getRatingsApis(page, pageSize, activeTab, searchQuery) {
       .range((page - 1) * pageSize, page * pageSize - 1)
       .limit(pageSize);
 
-    // console.log("ActiveTab value:", activeTab);
-    // Apply filter based on the activeTab value for rating_star
     if (activeTab !== "all") {
       query = query.eq("rating_star", activeTab);
     }
