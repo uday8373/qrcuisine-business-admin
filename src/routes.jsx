@@ -10,6 +10,7 @@ import {
   UserGroupIcon,
   Cog6ToothIcon,
   RectangleGroupIcon,
+  StarIcon,
 } from "@heroicons/react/24/solid";
 import {Home, Profile, Tables, Notifications, Category} from "@/pages/dashboard";
 import {SignIn} from "@/pages/auth";
@@ -18,6 +19,7 @@ import {Orders} from "./pages/dashboard/orders";
 import {WaiterTable} from "./pages/dashboard/waiter";
 import Settings from "./pages/dashboard/settings";
 import TableGrid from "./pages/dashboard/table-grid";
+import Ratings from "./pages/dashboard/ratings";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -80,6 +82,12 @@ export const routes = [
         name: "notifications",
         path: "/notifications",
         element: <Notifications />,
+      },
+      {
+        icon: <StarIcon {...icon} />,
+        name: "Ratings",
+        path: "/ratings",
+        element: <Ratings />,
       },
       {
         icon: <Cog6ToothIcon {...icon} />,

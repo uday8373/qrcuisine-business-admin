@@ -70,6 +70,8 @@ export function Category() {
       searchQuery,
     );
     if (categoryResult) {
+      console.log("result", categoryResult.count);
+
       setCategoryData(categoryResult.data);
       setMaxItems(categoryResult.count);
     }
