@@ -22,7 +22,7 @@ import {
   StarIcon,
 } from "@heroicons/react/24/solid";
 
-const TABLE_HEAD = ["Order ID", "User", "Rating", "Created"];
+const TABLE_HEAD = ["Order ID", "User", "Rating", "Date", "Time"];
 const TABS = [
   {label: "All", value: "all"},
   {label: "1", value: 1},
@@ -83,7 +83,7 @@ export default function Ratings() {
       stars.push(
         <span
           key={i}
-          className={`inline-block ${i <= rating ? "text-yellow-500" : "text-gray-300"}`}>
+          className={`inline-block ${i <= rating ? "text-yellow-700" : "text-gray-400"}`}>
           <StarIcon className="h-6 w-6" />
         </span>,
       );
@@ -94,7 +94,7 @@ export default function Ratings() {
     <div>
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
-          <div className="mb-5 flex items-center justify-between gap-8">
+          <div className="mb-5 flex  items-center justify-between gap-8">
             <div>
               <Typography variant="h5" color="blue-gray">
                 Ratings list
@@ -110,14 +110,16 @@ export default function Ratings() {
               <TabsHeader>
                 {TABS.map(({label, value}) => (
                   <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                    <div className="flex gap-1 p-1 items-center">
+                      {label} <StarIcon className="h-5 w-5" />
+                    </div>
                   </Tab>
                 ))}
               </TabsHeader>
             </Tabs>
             <div className="w-full md:w-72">
               <Input
-                label="Search by title"
+                label="Search by user"
                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -168,8 +170,6 @@ export default function Ratings() {
                 ) : (
                   ratingsData.map(
                     ({created_at, orders, rating_star, id, users}, index) => {
-                      // console.log(rating_star);
-
                       const isLast = index === ratingsData.length - 1;
                       const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
@@ -182,7 +182,7 @@ export default function Ratings() {
                                   variant="small"
                                   color="blue-gray"
                                   className="font-normal">
-                                  {orders?.id}
+                                  {orders?.order_id}
                                 </Typography>
                               </div>
                             </div>
@@ -226,6 +226,21 @@ export default function Ratings() {
                                       year: "numeric",
                                     })
                                     .replace(/-/g, " ")}
+                                </Typography>
+                              </div>
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <div className="flex items-center gap-3">
+                              <div className="flex flex-col">
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal">
+                                  {new Date(created_at).toLocaleTimeString("en-IN", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
                                 </Typography>
                               </div>
                             </div>
