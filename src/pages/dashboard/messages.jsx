@@ -68,7 +68,7 @@ export default function Messages() {
             <div className="w-full pt-2 relative">
               {/* Check if messageData exists and is an array */}
 
-              <List className="px-0 w-full   ">
+              <List className="px-0 w-full h-96 overflow-y-scroll ">
                 {messageData?.map(
                   (
                     {
@@ -86,39 +86,41 @@ export default function Messages() {
                     },
                     index,
                   ) => (
-                    <ListItem
-                      key={index}
-                      onClick={() => setActiveMessage(messageData[index])} // Set active message on click
-                      className={`cursor-pointer ${
-                        activeMessage === messageData[index] ? "bg-blue-50" : ""
-                      }`}>
-                      <ListItemPrefix className="w-20">
-                        <Avatar
-                          size="md"
-                          variant="circular"
-                          alt={users?.name || "Unknown User"}
-                          src={
-                            users?.avatar ||
-                            "https://docs.material-tailwind.com/img/face-1.jpg"
-                          }
-                        />
-                      </ListItemPrefix>
-                      <div
-                        className="w-full 
+                    <div className="min-h-96">
+                      <ListItem
+                        key={index}
+                        onClick={() => setActiveMessage(messageData[index])}
+                        className={`cursor-pointer  ${
+                          activeMessage === messageData[index] ? "bg-blue-50" : ""
+                        }`}>
+                        <ListItemPrefix className="w-20">
+                          <Avatar
+                            size="md"
+                            variant="circular"
+                            alt={users?.name || "Unknown User"}
+                            src={
+                              users?.avatar ||
+                              "https://docs.material-tailwind.com/img/face-1.jpg"
+                            }
+                          />
+                        </ListItemPrefix>
+                        <div
+                          className="w-full 
                       ">
-                        <Typography variant="h6" color="blue-gray">
-                          Table No :{" "}
-                          {tables?.table_no ? tables.table_no : "Unknown Table No"}
-                        </Typography>
+                          <Typography variant="h6" color="blue-gray">
+                            Table No :{" "}
+                            {tables?.table_no ? tables.table_no : "Unknown Table No"}
+                          </Typography>
 
-                        <Typography
-                          variant="small"
-                          color="gray"
-                          className="font-normal !line-clamp-1">
-                          {message ? message : "No message available"}
-                        </Typography>
-                      </div>{" "}
-                    </ListItem>
+                          <Typography
+                            variant="small"
+                            color="gray"
+                            className="font-normal !line-clamp-1">
+                            {message ? message : "No message available"}
+                          </Typography>
+                        </div>{" "}
+                      </ListItem>
+                    </div>
                   ),
                 )}
               </List>

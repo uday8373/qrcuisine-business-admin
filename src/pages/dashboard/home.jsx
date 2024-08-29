@@ -12,6 +12,9 @@ import {
   Avatar,
   Tooltip,
   Progress,
+  Tabs,
+  Tab,
+  TabsHeader,
 } from "@material-tailwind/react";
 import {EllipsisVerticalIcon, ArrowUpIcon} from "@heroicons/react/24/outline";
 import {StatisticsCard} from "@/widgets/cards";
@@ -24,9 +27,39 @@ import {
 } from "@/data";
 import {CheckCircleIcon, ClockIcon} from "@heroicons/react/24/solid";
 
+const tabs = [
+  {label: "All", value: "all"},
+  {label: "Today", value: "today"},
+  {label: "This Week", value: "week"},
+  {label: "This Month", value: "month"},
+];
+
 export function Home() {
   return (
     <div className="mt-12">
+      <Card className="border border-blue-gray-100 shadow-sm mb-8">
+        <CardBody className="w-full flex justify-between lg:items-center items-start px-4 py-8 lg:flex-row flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Typography variant="h4" className="font-semibold text-blue-gray-900">
+              Hello, Thek Restaurant 👋
+            </Typography>
+            <Typography variant="h6" className="font-normal text-blue-gray-600">
+              Let's check your stats!
+            </Typography>
+          </div>
+          <div className="lg:w-fit w-full">
+            <Tabs value="all" className="lg:w-fit w-full">
+              <TabsHeader>
+                {tabs.map((item, index) => (
+                  <Tab className="whitespace-nowrap px-5 " key={index} value={item.value}>
+                    {item.label}
+                  </Tab>
+                ))}
+              </TabsHeader>
+            </Tabs>
+          </div>
+        </CardBody>
+      </Card>
       <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
         {statisticsCardsData.map(({icon, title, footer, ...rest}) => (
           <StatisticsCard
