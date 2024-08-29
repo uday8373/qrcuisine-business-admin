@@ -6,7 +6,7 @@ export async function getRatingsApis(page, pageSize, activeTab, searchQuery) {
   try {
     let query = supabase
       .from("ratings")
-      .select(`*, users!inner(name), orders(id) `, {count: "exact"})
+      .select(`*, users!inner(name), orders(order_id) `, {count: "exact"})
       .eq("restaurant_id", restaurantId)
       .range((page - 1) * pageSize, page * pageSize - 1)
       .limit(pageSize);
