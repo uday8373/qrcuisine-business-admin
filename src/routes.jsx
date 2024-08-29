@@ -12,7 +12,7 @@ import {
   RectangleGroupIcon,
   StarIcon,
 } from "@heroicons/react/24/solid";
-import {Home, Profile, Tables, Notifications, Category} from "@/pages/dashboard";
+import {Home, Profile, Tables, Category} from "@/pages/dashboard";
 import {SignIn} from "@/pages/auth";
 import {FoodItems} from "./pages/dashboard/fooditem";
 import {Orders} from "./pages/dashboard/orders";
@@ -20,6 +20,7 @@ import {WaiterTable} from "./pages/dashboard/waiter";
 import Settings from "./pages/dashboard/settings";
 import TableGrid from "./pages/dashboard/table-grid";
 import Ratings from "./pages/dashboard/ratings";
+import Messages from "./pages/dashboard/messages";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -79,9 +80,9 @@ export const routes = [
       },
       {
         icon: <InformationCircleIcon {...icon} />,
-        name: "notifications",
-        path: "/notifications",
-        element: <Notifications />,
+        name: "messages",
+        path: "/messages",
+        element: <Messages />,
       },
       {
         icon: <StarIcon {...icon} />,
