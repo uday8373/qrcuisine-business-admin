@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {
   Typography,
   Card,
@@ -25,16 +25,99 @@ import {
   projectsTableData,
   ordersOverviewData,
 } from "@/data";
-import {CheckCircleIcon, ClockIcon} from "@heroicons/react/24/solid";
+import {
+  BanknotesIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  UserIcon,
+  UserPlusIcon,
+  UsersIcon,
+} from "@heroicons/react/24/solid";
+import {getOrdersApi, getUsersApi} from "@/apis/analytic-apis";
+import numeral from "numeral";
 
 const tabs = [
-  {label: "All", value: "all"},
   {label: "Today", value: "today"},
   {label: "This Week", value: "week"},
   {label: "This Month", value: "month"},
+  {label: "This Year", value: "year"},
 ];
 
 export function Home() {
+  const [orderTotalAmount, setOrderTotalAmount] = useState(0);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [newUsersCount, setNewUsersCount] = useState(0);
+  const [returningUsersCount, setReturningUsersCount] = useState(0);
+  const [selectedTab, setSelectedTab] = useState("today");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [orderResponse, userResponse] = await Promise.all([
+          getOrdersApi(selectedTab),
+          getUsersApi(selectedTab),
+        ]);
+        if (!orderResponse) {
+          throw new Error("Failed to fetch data");
+        } else {
+          const totalAmount = orderResponse.reduce((accumulator, order) => {
+            return accumulator + order.grand_amount;
+          }, 0);
+          setOrderTotalAmount(totalAmount);
+          const uniqueCustomers = new Set(userResponse.map((user) => user.deviceToken));
+          setTotalCustomers(uniqueCustomers.size);
+
+          const deviceTokenCount = {};
+          userResponse.forEach((user) => {
+            const {deviceToken} = user;
+            if (deviceTokenCount[deviceToken]) {
+              deviceTokenCount[deviceToken]++;
+            } else {
+              deviceTokenCount[deviceToken] = 1;
+            }
+          });
+
+          let newUsers = 0;
+          let returningUsers = 0;
+
+          Object.values(deviceTokenCount).forEach((count) => {
+            if (count === 1) {
+              newUsers++;
+            } else {
+              returningUsers++;
+            }
+          });
+
+          setNewUsersCount(newUsers);
+          setReturningUsersCount(returningUsers);
+        }
+      } catch (error) {
+        throw error;
+      }
+    };
+    fetchData();
+  }, [selectedTab]);
+
+  const handleTabChange = (value) => {
+    console.log("value: " + value);
+    setSelectedTab(value);
+  };
+
+  const getTitlePrefixByTab = (tab) => {
+    switch (tab) {
+      case "today":
+        return "Today's";
+      case "week":
+        return "Weekly";
+      case "month":
+        return "Monthly";
+      case "year":
+        return "Yearly";
+      default:
+        return "Today's";
+    }
+  };
+
   return (
     <div className="mt-12">
       <Card className="border border-blue-gray-100 shadow-sm mb-8">
@@ -48,11 +131,15 @@ export function Home() {
             </Typography>
           </div>
           <div className="lg:w-fit w-full">
-            <Tabs value="all" className="lg:w-fit w-full">
+            <Tabs value={selectedTab} className="lg:w-fit w-full">
               <TabsHeader>
-                {tabs.map((item, index) => (
-                  <Tab className="whitespace-nowrap px-5 " key={index} value={item.value}>
-                    {item.label}
+                {tabs.map(({label, value}) => (
+                  <Tab
+                    className="px-5 whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleTabChange(value)}>
+                    {label}
                   </Tab>
                 ))}
               </TabsHeader>
@@ -61,22 +148,62 @@ export function Home() {
         </CardBody>
       </Card>
       <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-        {statisticsCardsData.map(({icon, title, footer, ...rest}) => (
-          <StatisticsCard
-            key={title}
-            {...rest}
-            title={title}
-            icon={React.createElement(icon, {
-              className: "w-6 h-6 text-white",
-            })}
-            footer={
-              <Typography className="font-normal text-blue-gray-600">
-                <strong className={footer.color}>{footer.value}</strong>
-                &nbsp;{footer.label}
-              </Typography>
-            }
-          />
-        ))}
+        <StatisticsCard
+          color="gray"
+          value={`₹ ${numeral(orderTotalAmount).format("0a")}`}
+          title={`${getTitlePrefixByTab(selectedTab)} Sales`}
+          icon={React.createElement(BanknotesIcon, {
+            className: "w-6 h-6 text-white",
+          })}
+          footer={
+            <Typography className="font-normal text-blue-gray-600">
+              <strong className="text-green-500">+55%</strong>
+              &nbsp;than last week
+            </Typography>
+          }
+        />
+        <StatisticsCard
+          color="gray"
+          value={`${numeral(totalCustomers).format("0a")}`}
+          title={`${getTitlePrefixByTab(selectedTab)} Total Customers`}
+          icon={React.createElement(UsersIcon, {
+            className: "w-6 h-6 text-white",
+          })}
+          footer={
+            <Typography className="font-normal text-blue-gray-600">
+              <strong className="text-green-500">+55%</strong>
+              &nbsp;than last week
+            </Typography>
+          }
+        />
+        <StatisticsCard
+          color="gray"
+          value={`${numeral(newUsersCount).format("0a")}`}
+          title={`${getTitlePrefixByTab(selectedTab)} New Customers`}
+          icon={React.createElement(UserIcon, {
+            className: "w-6 h-6 text-white",
+          })}
+          footer={
+            <Typography className="font-normal text-blue-gray-600">
+              <strong className="text-green-500">+55%</strong>
+              &nbsp;than last week
+            </Typography>
+          }
+        />
+        <StatisticsCard
+          color="gray"
+          value={`${numeral(returningUsersCount).format("0a")}`}
+          title={`${getTitlePrefixByTab(selectedTab)} Returning Customers`}
+          icon={React.createElement(UserPlusIcon, {
+            className: "w-6 h-6 text-white",
+          })}
+          footer={
+            <Typography className="font-normal text-blue-gray-600">
+              <strong className="text-green-500">+55%</strong>
+              &nbsp;than last week
+            </Typography>
+          }
+        />
       </div>
       <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
         {statisticsChartsData.map((props) => (
