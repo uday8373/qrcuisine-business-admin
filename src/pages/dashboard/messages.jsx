@@ -12,126 +12,160 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import {MagnifyingGlassIcon} from "@heroicons/react/24/solid";
-import {getMessageApis} from "@/apis/messages-api";
+import {getMessageApis, markMessagesAsRead} from "@/apis/messages-api";
+import MessageList from "@/components/message-table/MessageList";
 
 export default function Messages() {
   const [messageData, setMessageData] = useState([]);
+  const [filteredMessages, setFilteredMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeMessage, setActiveMessage] = useState(null);
+  const [activeTable, setActiveTable] = useState(null);
+  const [messageCountByTable, setMessageCountByTable] = useState({});
   const [loading, setLoading] = useState(true);
 
   const fetchMessageData = async () => {
-    const messageResult = await getMessageApis();
-    if (messageResult) {
-      const messages = messageResult.data;
+    try {
+      const messageResult = await getMessageApis(searchQuery);
 
-      // Sort messages in descending order based on created_at
-      const sortedMessages = messages.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at),
-      );
+      if (messageResult && messageResult.data) {
+        const messages = messageResult.data;
 
-      setMessageData(sortedMessages);
+        const sortedMessages = messages.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at),
+        );
+        setMessageData(sortedMessages);
 
-      // Set the most recent message as the active message by default
-      if (sortedMessages.length > 0) {
-        setActiveMessage(sortedMessages[0]);
+        // Count messages by table_no
+        const countByTable = messages.reduce((acc, message) => {
+          const tableNo = message.tables?.table_no;
+          if (tableNo && message.is_read === false) {
+            acc[tableNo] = (acc[tableNo] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        setMessageCountByTable(countByTable);
       }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching message data:", error);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  console.log("activeMessage", activeMessage);
+  // Filter messages based on active table number
+  const handleTableClick = async (tableNo) => {
+    setActiveTable(tableNo);
+
+    const filtered = messageData.filter(
+      (message) => message.tables?.table_no === tableNo,
+    );
+
+    setFilteredMessages(
+      filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+    );
+
+    if (filtered.length > 0) {
+      setActiveTable(filtered[0]);
+    }
+
+    // Get table_id from filtered messages
+    const tableId = filtered.length > 0 ? filtered[0].tables?.id : null;
+
+    // Mark messages as read for the specific table
+    if (tableId) {
+      try {
+        await markMessagesAsRead(tableId);
+        const updatedMessageCountByTable = {...messageCountByTable};
+        updatedMessageCountByTable[tableNo] = 0; // Reset count for the table
+        setMessageCountByTable(updatedMessageCountByTable);
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
+    }
+  };
   useEffect(() => {
     fetchMessageData();
-  }, []);
+  }, [searchQuery]);
 
   return (
     <div>
       <Card className="h-full w-full">
-        <CardBody className="overflow-x-scroll grid  grid-cols-1 md:grid-cols-3  gap-4 px-5">
-          <div className=" w-full border-r border-gray-400  pr-5">
+        <CardBody className="overflow-hidden grid grid-cols-1 md:grid-cols-3 px-5">
+          <div className="w-full border-r border-gray-400 pr-5">
             <AvatarWithDotIndicator messageResult={messageData} />
-            <div className="w-full mt-6 ">
+            <div className="w-full mt-5">
               <Input
                 label="Search by user"
                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     setLoading(true);
+                    fetchMessageData();
                   }
                 }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
             <div className="w-full pt-2 relative">
-              {/* Check if messageData exists and is an array */}
-
-              <List className="px-0 w-full h-96 overflow-y-scroll ">
-                {messageData?.map(
-                  (
-                    {
-                      created_at,
-                      is_read,
-                      message,
-                      order_id,
-                      restaurant_id,
-                      restaurants,
-                      sub_message,
-                      table_id,
-                      tables,
-                      user_id,
-                      users,
-                    },
-                    index,
-                  ) => (
-                    <div className="min-h-96">
-                      <ListItem
-                        key={index}
-                        onClick={() => setActiveMessage(messageData[index])}
-                        className={`cursor-pointer  ${
-                          activeMessage === messageData[index] ? "bg-blue-50" : ""
-                        }`}>
-                        <ListItemPrefix className="w-20">
+              <List className="px-0 w-full h-96 overflow-y-scroll pr-2">
+                {Array.from(
+                  new Map(
+                    messageData
+                      .sort((b, a) => new Date(b.created_at) - new Date(a.created_at))
+                      .map((msg) => [msg.tables?.table_no, msg]),
+                  ).values(),
+                ).map((msg, index) => (
+                  <div className="w-full min-h-96" key={msg.tables?.table_no || index}>
+                    <ListItem
+                      onClick={() => handleTableClick(msg.tables?.table_no)}
+                      className={`cursor-pointer ${
+                        activeTable === msg.tables?.table_no ? "bg-blue-50" : ""
+                      }`}>
+                      <ListItemPrefix className="w-16">
+                        <Badge
+                          placement="bottom-end"
+                          overlap="circular"
+                          content={messageCountByTable[msg.tables?.table_no] || 0}
+                          color="green"
+                          className={`font-normal w-2 h-2  flex items-center  justify-center ${
+                            messageCountByTable[msg.tables?.table_no]
+                              ? ""
+                              : " bg-[#4caf50] text-[#4caf50]"
+                          }`}
+                          withBorder>
                           <Avatar
                             size="md"
                             variant="circular"
-                            alt={users?.name || "Unknown User"}
-                            src={
-                              users?.avatar ||
-                              "https://docs.material-tailwind.com/img/face-1.jpg"
-                            }
+                            alt="Table Icon"
+                            src="https://docs.material-tailwind.com/img/face-1.jpg"
                           />
-                        </ListItemPrefix>
-                        <div
-                          className="w-full 
-                      ">
-                          <Typography variant="h6" color="blue-gray">
-                            Table No :{" "}
-                            {tables?.table_no ? tables.table_no : "Unknown Table No"}
-                          </Typography>
-
-                          <Typography
-                            variant="small"
-                            color="gray"
-                            className="font-normal !line-clamp-1">
-                            {message ? message : "No message available"}
-                          </Typography>
-                        </div>{" "}
-                      </ListItem>
-                    </div>
-                  ),
-                )}
+                        </Badge>
+                      </ListItemPrefix>
+                      <div className="w-full">
+                        <Typography variant="h6" color="blue-gray">
+                          Table No : {msg.tables?.table_no || "Unknown Table No"}
+                        </Typography>
+                        <Typography
+                          variant="small"
+                          color="gray"
+                          className="font-normal !line-clamp-1">
+                          {msg.message ? msg.message : "No message available"}
+                        </Typography>
+                      </div>
+                    </ListItem>
+                  </div>
+                ))}
               </List>
             </div>
           </div>
-
-          <div className=" w-full col-span-2">
-            {activeMessage ? (
-              <div>
-                <div className="w-full flex justify-between ">
-                  <div className="flex gap-3 items-center pb-10">
+          <div className="w-full max-h-96 px-5 col-span-2">
+            {filteredMessages.length > 0 ? (
+              <>
+                <div className="w-full flex justify-between items-center py-5 ">
+                  <div className="flex gap-3 items-center">
                     <Badge
                       placement="bottom-end"
                       overlap="circular"
@@ -144,35 +178,24 @@ export default function Messages() {
                       />
                     </Badge>
                     <div>
-                      <Typography variant="h6">{activeMessage?.users.name}</Typography>
+                      <Typography variant="h6" color="gray">
+                        Table No:{" "}
+                        {filteredMessages[0]?.tables?.table_no || "Unknown Table No"}
+                      </Typography>
                       <Typography variant="small" color="gray" className="font-normal">
-                        Online
+                        {filteredMessages[0]?.tables?.is_booked ? "Booked" : "Available"}
                       </Typography>
                     </div>
                   </div>
-                  <div>
-                    <Typography variant="h6" color="gray">
-                      Table No : {activeMessage.tables.table_no}
-                    </Typography>
-                  </div>
                 </div>
-
-                <Typography variant="h6" color="blue-gray">
-                  {activeMessage.message}
-                </Typography>
-                <Typography variant="small" color="gray" className="font-normal mt-2">
-                  Sent by: {activeMessage?.users?.name || "Unknown User"}
-                </Typography>
-                <Typography variant="small" color="gray" className="font-normal mt-2">
-                  {activeMessage.sub_message || "No additional details"}
-                </Typography>
-              </div>
+                <div className="w-full   border-t border-gray-300  ">
+                  <MessageList filteredMessages={filteredMessages} />
+                </div>
+              </>
             ) : (
-              <div>
-                <Typography variant="h6" color="blue-gray">
-                  Select a message to view details.
-                </Typography>
-              </div>
+              <Typography variant="h6" color="blue-gray">
+                Select a table to view messages.
+              </Typography>
             )}
           </div>
         </CardBody>
