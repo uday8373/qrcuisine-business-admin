@@ -33,13 +33,19 @@ import {
   UserPlusIcon,
   UsersIcon,
 } from "@heroicons/react/24/solid";
-import {getOrdersApi, getUsersApi} from "@/apis/analytic-apis";
+import {getOrdersApi, getUsersApi, getVisitorApi} from "@/apis/analytic-apis";
 import numeral from "numeral";
+import VisitorChart from "@/components/charts/visitor-chart";
 
 const tabs = [
   {label: "Today", value: "today"},
   {label: "This Week", value: "week"},
   {label: "This Month", value: "month"},
+  {label: "This Year", value: "year"},
+];
+
+const chartTabs = [
+  {label: "This Week", value: "week"},
   {label: "This Year", value: "year"},
 ];
 
@@ -49,13 +55,25 @@ export function Home() {
   const [newUsersCount, setNewUsersCount] = useState(0);
   const [returningUsersCount, setReturningUsersCount] = useState(0);
   const [selectedTab, setSelectedTab] = useState("today");
+  const [activeChartTab, setActiveChartTab] = useState("week");
+  const [chartData, setChartData] = useState({
+    website_visit: [],
+    booked_count: [],
+    checkout_count: [],
+    place_order_count: [],
+    order_confirm_count: [],
+    order_preparing_count: [],
+    order_delivered_count: [],
+    labels: [],
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orderResponse, userResponse] = await Promise.all([
+        const [orderResponse, userResponse, visitorResponse] = await Promise.all([
           getOrdersApi(selectedTab),
           getUsersApi(selectedTab),
+          getVisitorApi(activeChartTab),
         ]);
         if (!orderResponse) {
           throw new Error("Failed to fetch data");
@@ -90,17 +108,63 @@ export function Home() {
 
           setNewUsersCount(newUsers);
           setReturningUsersCount(returningUsers);
+
+          console.log("users", userResponse);
+          console.log("Order", orderResponse);
+
+          const websiteVisits = visitorResponse.map((item) => item.website_visit);
+          const checkoutCounts = visitorResponse.map((item) => item.checkout_count);
+          const bookedCounts = visitorResponse.map((item) => item.booked_count);
+          const placeOrderCounts = visitorResponse.map((item) => item.place_order_count);
+          const orderConfirmCounts = visitorResponse.map(
+            (item) => item.order_confirm_count,
+          );
+          const orderPreparingCounts = visitorResponse.map(
+            (item) => item.order_preparing_count,
+          );
+          const orderDeliveredCounts = visitorResponse.map(
+            (item) => item.order_delivered_count,
+          );
+
+          let labels;
+
+          if (activeChartTab === "week") {
+            // Generate labels for the days of the week based on the created_at date
+            labels = visitorResponse.map((item) => {
+              const date = new Date(item.created_at);
+              return date.toLocaleDateString("en-IN", {weekday: "short"}); // e.g., 'Sun', 'Mon'
+            });
+          } else {
+            // Generate labels for months
+            labels = visitorResponse.map((item) => {
+              const date = new Date(item.created_at);
+              return date.toLocaleDateString("en-IN", {month: "short"}); // e.g., 'Jan', 'Feb'
+            });
+          }
+
+          setChartData({
+            website_visit: websiteVisits,
+            checkout_count: checkoutCounts,
+            booked_count: bookedCounts,
+            place_order_count: placeOrderCounts,
+            order_confirm_count: orderConfirmCounts,
+            order_preparing_count: orderPreparingCounts,
+            order_delivered_count: orderDeliveredCounts,
+            labels: labels,
+          });
         }
       } catch (error) {
         throw error;
       }
     };
     fetchData();
-  }, [selectedTab]);
+  }, [selectedTab, activeChartTab]);
 
   const handleTabChange = (value) => {
-    console.log("value: " + value);
     setSelectedTab(value);
+  };
+  const handleChartTabChange = (value) => {
+    setActiveChartTab(value);
   };
 
   const getTitlePrefixByTab = (tab) => {
@@ -120,7 +184,7 @@ export function Home() {
 
   return (
     <div className="mt-12">
-      <Card className="border border-blue-gray-100 shadow-sm mb-8">
+      <Card className="border border-blue-gray-100 shadow-sm mb-5">
         <CardBody className="w-full flex justify-between lg:items-center items-start px-4 py-8 lg:flex-row flex-col gap-5">
           <div className="flex flex-col gap-2">
             <Typography variant="h4" className="font-semibold text-blue-gray-900">
@@ -147,10 +211,10 @@ export function Home() {
           </div>
         </CardBody>
       </Card>
-      <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
         <StatisticsCard
           color="gray"
-          value={`₹ ${numeral(orderTotalAmount).format("0a")}`}
+          value={`₹ ${orderTotalAmount}`}
           title={`${getTitlePrefixByTab(selectedTab)} Sales`}
           icon={React.createElement(BanknotesIcon, {
             className: "w-6 h-6 text-white",
@@ -205,21 +269,32 @@ export function Home() {
           }
         />
       </div>
-      <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-        {statisticsChartsData.map((props) => (
-          <StatisticsChart
-            key={props.title}
-            {...props}
-            footer={
-              <Typography
-                variant="small"
-                className="flex items-center font-normal text-blue-gray-600">
-                <ClockIcon strokeWidth={2} className="h-4 w-4 text-blue-gray-400" />
-                &nbsp;{props.footer}
-              </Typography>
-            }
-          />
-        ))}
+      <Card className="border border-blue-gray-100 shadow-sm mb-5">
+        <CardBody className="w-full flex justify-between lg:items-center items-start px-4 py-5 lg:flex-row flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Typography variant="h4" className="font-semibold text-blue-gray-900">
+              Analytics Charts 💹
+            </Typography>
+          </div>
+          <div className="lg:w-fit w-full">
+            <Tabs value={activeChartTab} className="lg:w-fit w-full">
+              <TabsHeader>
+                {chartTabs.map(({label, value}) => (
+                  <Tab
+                    className="px-5 whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleChartTabChange(value)}>
+                    {label}
+                  </Tab>
+                ))}
+              </TabsHeader>
+            </Tabs>
+          </div>
+        </CardBody>
+      </Card>
+      <div className="mb-8 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 ">
+        <VisitorChart chartData={chartData} />
       </div>
       <div className="mb-4 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card className="overflow-hidden xl:col-span-2 border border-blue-gray-100 shadow-sm">
