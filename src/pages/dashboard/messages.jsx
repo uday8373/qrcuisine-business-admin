@@ -5,6 +5,8 @@ import {
   Badge,
   Card,
   CardBody,
+  Chip,
+  IconButton,
   Input,
   List,
   ListItem,
@@ -15,6 +17,24 @@ import {MagnifyingGlassIcon} from "@heroicons/react/24/solid";
 import {getMessageApis, markMessagesAsRead} from "@/apis/messages-api";
 import MessageList from "@/components/message-table/MessageList";
 
+function timeAgo(createdDate) {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - new Date(createdDate)) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} seconds`;
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes > 1 ? "s" : ""} `;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours > 1 ? "s" : ""} `;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? "s" : ""} `;
+  }
+}
+
 export default function Messages() {
   const [messageData, setMessageData] = useState([]);
   const [filteredMessages, setFilteredMessages] = useState([]);
@@ -23,15 +43,19 @@ export default function Messages() {
   const [messageCountByTable, setMessageCountByTable] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Fetch message data
   const fetchMessageData = async () => {
     try {
       const messageResult = await getMessageApis(searchQuery);
 
       if (messageResult && messageResult.data) {
-        const messages = messageResult.data;
+        const messages = messageResult.data.map((msg) => ({
+          ...msg,
+          timeAgo: timeAgo(msg.created_at), // Calculate relative time
+        }));
 
         const sortedMessages = messages.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at),
+          (a, b) => new Date(a.created_at) - new Date(b.created_at),
         );
         setMessageData(sortedMessages);
 
@@ -54,7 +78,7 @@ export default function Messages() {
     }
   };
 
-  // Filter messages based on active table number
+  // Handle table click and filter messages by table_no
   const handleTableClick = async (tableNo) => {
     setActiveTable(tableNo);
 
@@ -63,31 +87,53 @@ export default function Messages() {
     );
 
     setFilteredMessages(
-      filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+      filtered.sort((b, a) => new Date(b.created_at) - new Date(a.created_at)),
     );
 
-    if (filtered.length > 0) {
-      setActiveTable(filtered[0]);
-    }
-
-    // Get table_id from filtered messages
-    const tableId = filtered.length > 0 ? filtered[0].tables?.id : null;
-
     // Mark messages as read for the specific table
-    if (tableId) {
-      try {
-        await markMessagesAsRead(tableId);
-        const updatedMessageCountByTable = {...messageCountByTable};
-        updatedMessageCountByTable[tableNo] = 0; // Reset count for the table
-        setMessageCountByTable(updatedMessageCountByTable);
-      } catch (error) {
-        console.error("Error marking messages as read:", error);
+    if (filtered.length > 0) {
+      const tableId = filtered[0].tables?.id;
+
+      if (tableId) {
+        try {
+          await markMessagesAsRead(tableId);
+          const updatedMessageCountByTable = {...messageCountByTable};
+          updatedMessageCountByTable[tableNo] = 0; // Reset count for the table
+          setMessageCountByTable(updatedMessageCountByTable);
+        } catch (error) {
+          console.error("Error marking messages as read:", error);
+        }
       }
     }
   };
+  // Select the most recent message for each table
+  const latestMessagesByTable = Array.from(
+    messageData.reduce((acc, msg) => {
+      const tableNo = msg.tables?.table_no;
+      if (tableNo) {
+        // If the table_no is already in the map, check if this message is newer
+        if (
+          !acc.has(tableNo) ||
+          new Date(msg.created_at) > new Date(acc.get(tableNo).created_at)
+        ) {
+          acc.set(tableNo, msg);
+        }
+      }
+      return acc;
+    }, new Map()),
+  ).sort((a, b) => new Date(b[1].created_at) - new Date(a[1].created_at)); // Sort by the latest message
+
   useEffect(() => {
-    fetchMessageData();
+    let isMounted = true; // Flag to prevent state updates if unmounted
+    if (isMounted) {
+      fetchMessageData();
+    }
+    return () => {
+      isMounted = false; // Cleanup to avoid memory leaks
+    };
   }, [searchQuery]);
+
+  console.log("sadsa", messageData);
 
   return (
     <div>
@@ -110,44 +156,45 @@ export default function Messages() {
               />
             </div>
             <div className="w-full pt-2 relative">
-              <List className="px-0 w-full h-96 overflow-y-scroll pr-2">
-                {Array.from(
-                  new Map(
-                    messageData
-                      .sort((b, a) => new Date(b.created_at) - new Date(a.created_at))
-                      .map((msg) => [msg.tables?.table_no, msg]),
-                  ).values(),
-                ).map((msg, index) => (
-                  <div className="w-full min-h-96" key={msg.tables?.table_no || index}>
+              <List className="px-0 w-full h-96 overflow-y-auto pr-2">
+                {latestMessagesByTable.map(([tableNo, msg], index) => (
+                  <div className="w-full min-h-96" key={tableNo || index}>
                     <ListItem
-                      onClick={() => handleTableClick(msg.tables?.table_no)}
+                      onClick={() => handleTableClick(tableNo)}
                       className={`cursor-pointer ${
-                        activeTable === msg.tables?.table_no ? "bg-blue-50" : ""
+                        activeTable === tableNo ? "bg-blue-50" : ""
                       }`}>
                       <ListItemPrefix className="w-16">
                         <Badge
                           placement="bottom-end"
                           overlap="circular"
-                          content={messageCountByTable[msg.tables?.table_no] || 0}
+                          content={messageCountByTable[tableNo] || 0}
                           color="green"
-                          className={`font-normal w-2 h-2  flex items-center  justify-center ${
-                            messageCountByTable[msg.tables?.table_no]
+                          className={`font-normal w-2 h-2 flex items-center justify-center ${
+                            messageCountByTable[tableNo]
                               ? ""
                               : " bg-[#4caf50] text-[#4caf50]"
                           }`}
                           withBorder>
-                          <Avatar
-                            size="md"
-                            variant="circular"
-                            alt="Table Icon"
-                            src="https://docs.material-tailwind.com/img/face-1.jpg"
-                          />
+                          <IconButton color="amber" size="lg" className="rounded-full ">
+                            <Typography variant="h6" color="white">
+                              {tableNo}
+                            </Typography>
+                          </IconButton>
                         </Badge>
                       </ListItemPrefix>
                       <div className="w-full">
-                        <Typography variant="h6" color="blue-gray">
-                          Table No : {msg.tables?.table_no || "Unknown Table No"}
-                        </Typography>
+                        <div className="w-full flex items-center justify-between">
+                          <Typography variant="h6" color="blue-gray">
+                            Table No: {tableNo || "Unknown Table No"}
+                          </Typography>
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal !line-clamp-1">
+                            {msg.timeAgo}
+                          </Typography>
+                        </div>
                         <Typography
                           variant="small"
                           color="gray"
@@ -171,20 +218,23 @@ export default function Messages() {
                       overlap="circular"
                       color="green"
                       withBorder>
-                      <Avatar
-                        size="md"
-                        src="https://docs.material-tailwind.com/img/face-2.jpg"
-                        alt="avatar"
-                      />
+                      <IconButton color="amber" size="lg" className="rounded-full ">
+                        <Typography variant="h6" color="white">
+                          {filteredMessages[0]?.tables?.table_no}
+                        </Typography>
+                      </IconButton>
                     </Badge>
                     <div>
                       <Typography variant="h6" color="gray">
                         Table No:{" "}
                         {filteredMessages[0]?.tables?.table_no || "Unknown Table No"}
                       </Typography>
-                      <Typography variant="small" color="gray" className="font-normal">
-                        {filteredMessages[0]?.tables?.is_booked ? "Booked" : "Available"}
-                      </Typography>
+                      <Chip
+                        color={filteredMessages[0]?.tables?.is_booked ? "amber" : "green"}
+                        value={
+                          filteredMessages[0]?.tables?.is_booked ? "Booked" : "Available"
+                        }
+                      />
                     </div>
                   </div>
                 </div>

@@ -12,7 +12,7 @@ export default function MessageList({filteredMessages}) {
   }, [filteredMessages]);
 
   return (
-    <div className="w-full max-h-96 pt-5 pb-10 overflow-y-scroll">
+    <div className="w-full max-h-96 pt-5 pb-5 overflow-y-auto">
       {filteredMessages.map((msg, index) => (
         <div key={index}>
           <ChatBubble message={msg} />
