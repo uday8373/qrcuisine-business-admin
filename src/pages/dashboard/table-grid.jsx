@@ -67,8 +67,6 @@ const TableGrid = () => {
           // });
       }
     });
-    
-
     // Make the whole pink area a dropzone
     interact('.pink-area').dropzone({
       accept: '.resize-drag', // Accept draggable elements
