@@ -1,0 +1,143 @@
+/* CSS for dashboard */
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(10, 10px); /* 10 columns of 10px */
+    grid-template-rows: repeat(10, 10px);    /* 10 rows of 10px */
+    gap: 1px; /* Optional: add a small gap between grid items */
+    width: fit-content;
+  }
+  
+  .grid-container::before {
+    content: '';
+    display: block;
+    padding-top: 100%; /* This ensures the grid maintains a square aspect ratio */
+  }
+  
+  .grid-container::after {
+    content: '';
+  }
+
+  .table-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.main-area {
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(to right, rgba(136, 136, 136, 0.277) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(127, 127, 127, 0.257) 1px, transparent 1px);
+  background-size: 10px 10px;
+  background-position: left top;
+  border: 1px solid black;
+}
+
+.table {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-number {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.round-table {
+    background-color: #9fe245;
+    border-radius: 50%;
+}
+
+.rectangle-table {
+    background-color: #5ba7f7;
+    border-radius: 20px;
+    width: 50px;
+    height: 20px;
+}
+
+.small-rectangle-table {
+    background-color: #c49f24;
+    border-radius: 10px;
+    width: 80px;
+    height: 50px;
+}
+
+.large-rectangle-table {
+    background-color: #eb5c5c;
+    border-radius: 20px;
+    width: 50px;
+    height: 20px;
+}
+
+.seat {
+    position: absolute;
+    width: 30px; /* Updated width */
+    height: 15px; /* Updated height */
+    background-color: #000;
+}
+
+.seat-top {
+    top: -7.5px; /* Adjusted position */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.seat-bottom {
+    bottom: -7.5px; /* Adjusted position */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.seat-left {
+    left: -15px; /* Adjusted position */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 30px;
+}
+
+.seat-right {
+    right: -15px; /* Adjusted position */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 30px;
+}
+
+/* Additional seats for the larger rectangle table */
+.seat-left2 {
+    left: -15px;
+    top: calc(50% - 30px);
+    transform: translateY(-50%);
+    width: 15px;
+    height: 30px;
+}
+
+.seat-right2 {
+    right: -15px;
+    top: calc(50% + 30px);
+    transform: translateY(-50%);
+    width: 15px;
+    height: 30px;
+}
+
+.round-sub-circle {
+  background-color: #71ba11;
+  border-radius: 60%;
+  padding: 25%;
+}
+
+.rect-sub-circle {
+  background-color: #318bec;;
+  border-radius: 60%;
+  padding: 25%;
+}
