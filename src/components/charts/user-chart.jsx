@@ -1,40 +1,24 @@
 import React from "react";
 import {Card, CardBody, CardHeader, Typography} from "@material-tailwind/react";
 import Chart from "react-apexcharts";
-import {PresentationChartLineIcon} from "@heroicons/react/24/solid";
+import {ChartBarIcon} from "@heroicons/react/24/solid";
 
-export default function VisitorChart({chartData}) {
+export default function UserChart({chartData}) {
   const chartConfig = {
-    type: "area",
+    type: "bar",
     height: 320,
     series: [
       {
-        name: "Website Visits",
-        data: chartData.website_visit,
+        name: "Total Customers",
+        data: chartData.totalUsersCount,
       },
       {
-        name: "Table Booked",
-        data: chartData.booked_count,
+        name: "New Customers",
+        data: chartData.newUsersCount,
       },
       {
-        name: "Order Checkout",
-        data: chartData.checkout_count,
-      },
-      {
-        name: "Order Placed",
-        data: chartData.place_order_count,
-      },
-      {
-        name: "Order Confirmed",
-        data: chartData.order_confirm_count,
-      },
-      {
-        name: "Order Preparing",
-        data: chartData.order_preparing_count,
-      },
-      {
-        name: "Order Delivered",
-        data: chartData.order_delivered_count,
+        name: "Returning Customers",
+        data: chartData.returningUsersCount,
       },
     ],
     options: {
@@ -49,18 +33,11 @@ export default function VisitorChart({chartData}) {
       dataLabels: {
         enabled: false,
       },
-      colors: [
-        "#71717A",
-        "#F5A524",
-        "#7EE7FC",
-        "#006FEE",
-        "#7828C8",
-        "#FF4ECD",
-        "#17C964",
-      ],
-      stroke: {
-        lineCap: "round",
-        curve: "smooth",
+      colors: ["#006FEE", "#22c55e", "#f59e0b"],
+      plotOptions: {
+        bar: {
+          borderRadius: 2,
+        },
       },
       markers: {
         size: 0,
@@ -106,19 +83,19 @@ export default function VisitorChart({chartData}) {
           right: 20,
         },
       },
-      fill: {
-        type: "gradient",
-        gradient: {
-          shade: "light",
-          type: "vertical",
-          shadeIntensity: 1,
-          gradientToColors: ["#1E40AF"],
-          inverseColors: false,
-          opacityFrom: 0.5,
-          opacityTo: 0,
-          stops: [0, 100],
-        },
-      },
+      // fill: {
+      //   type: "gradient",
+      //   gradient: {
+      //     shade: "light",
+      //     type: "vertical",
+      //     shadeIntensity: 1,
+      //     gradientToColors: ["#fff"],
+      //     inverseColors: false,
+      //     opacityFrom: 0.5,
+      //     opacityTo: 0,
+      //     stops: [0, 100],
+      //   },
+      // },
       tooltip: {
         theme: "light",
       },
@@ -133,14 +110,14 @@ export default function VisitorChart({chartData}) {
         color="transparent"
         className="flex flex-col gap-4 rounded-none md:flex-row md:items-center">
         <div className="w-max rounded-xl bg-gray-900 p-3 text-white">
-          <PresentationChartLineIcon className="h-6 w-6" />
+          <ChartBarIcon className="h-6 w-6" />
         </div>
         <div>
           <Typography variant="h6" color="blue-gray">
-            Customers Page Visits
+            Customers Analytics
           </Typography>
           <Typography variant="small" color="gray" className="max-w-sm font-normal">
-            Total visits on the website
+            Total Customers on the website
           </Typography>
         </div>
       </CardHeader>

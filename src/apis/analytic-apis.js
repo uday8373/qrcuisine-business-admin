@@ -5,47 +5,87 @@ const restaurantId = localStorage.getItem("restaurants_id");
 
 export async function getOrdersApi(timeRange) {
   try {
-    let startDate;
-    let endDate;
+    let currentStartDate;
+    let currentEndDate;
+    let previousStartDate;
+    let previousEndDate;
 
     switch (timeRange) {
       case "today":
-        // startDate = moment.utc().startOf("day").toISOString();
-        // endDate = moment.utc().endOf("day").toISOString();
-        startDate = moment().format("YYYY-MM-DD");
-        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        currentStartDate = moment().startOf("day").format("YYYY-MM-DD");
+        currentEndDate = moment().add(1, "day").startOf("day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "day")
+          .startOf("day")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment().startOf("day").format("YYYY-MM-DD");
         break;
       case "week":
-        startDate = moment().add(-7, "day").format("YYYY-MM-DD");
-        endDate = moment().format("YYYY-MM-DD");
+        currentStartDate = moment().startOf("week").format("YYYY-MM-DD");
+        currentEndDate = moment().endOf("week").add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "week")
+          .startOf("week")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment()
+          .subtract(1, "week")
+          .endOf("week")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
         break;
       case "month":
-        startDate = moment().subtract(1, "months").startOf("month").format("YYYY-MM-DD");
-        endDate = moment().subtract(1, "months").endOf("month").format("YYYY-MM-DD");
+        currentStartDate = moment().startOf("month").format("YYYY-MM-DD");
+        currentEndDate = moment().endOf("month").add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "month")
+          .startOf("month")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment()
+          .subtract(1, "month")
+          .endOf("month")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
         break;
       case "year":
-        startDate = moment.utc().startOf("year").toISOString();
-        endDate = moment.utc().endOf("year").toISOString();
+        currentStartDate = moment().startOf("year").format("YYYY-MM-DD");
+        currentEndDate = moment().endOf("year").add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "year")
+          .startOf("year")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment()
+          .subtract(1, "year")
+          .endOf("year")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
         break;
       default:
         throw new Error("Invalid time range");
     }
-    console.log("value", timeRange);
-    console.log("startDate", startDate);
-    console.log("endDate", endDate);
 
-    const {data, error} = await supabase
+    const {data: currentData, error: currentError} = await supabase
       .from("orders")
       .select("id, grand_amount, created_at")
       .eq("restaurant_id", restaurantId)
-      .gte("created_at", startDate)
-      .lt("created_at", endDate);
+      .gte("created_at", currentStartDate)
+      .lt("created_at", currentEndDate);
 
-    if (error) {
-      throw error;
-    } else {
-      return data;
+    if (currentError) {
+      throw currentError;
     }
+
+    const {data: previousData, error: previousError} = await supabase
+      .from("orders")
+      .select("id, grand_amount, created_at")
+      .eq("restaurant_id", restaurantId)
+      .gte("created_at", previousStartDate)
+      .lt("created_at", previousEndDate);
+
+    if (previousError) {
+      throw previousError;
+    }
+
+    return {currentData, previousData};
   } catch (error) {
     console.error("Error fetching data:", error);
     throw error;
@@ -54,45 +94,81 @@ export async function getOrdersApi(timeRange) {
 
 export async function getUsersApi(timeRange) {
   try {
-    const today = new Date();
-    let startDate;
-    let endDate;
+    let startDate, endDate, previousStartDate, previousEndDate;
 
     switch (timeRange) {
       case "today":
-        startDate = new Date(today.setHours(0, 0, 0, 0));
-        endDate = new Date(today.setHours(23, 59, 59, 999));
+        startDate = moment().format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment().subtract(1, "day").format("YYYY-MM-DD");
+        previousEndDate = moment().format("YYYY-MM-DD");
         break;
       case "week":
-        startDate = new Date(today.setHours(0, 0, 0, 0));
-        startDate.setDate(today.getDate() - today.getDay());
-        endDate = new Date(today.setHours(23, 59, 59, 999));
-        endDate.setDate(startDate.getDate() + 7);
+        startDate = moment().startOf("week").format("YYYY-MM-DD");
+        endDate = moment().endOf("week").add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "week")
+          .startOf("week")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment()
+          .subtract(1, "week")
+          .endOf("week")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
         break;
       case "month":
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        startDate = moment().startOf("month").format("YYYY-MM-DD");
+        endDate = moment().endOf("month").add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "month")
+          .startOf("month")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment()
+          .subtract(1, "month")
+          .endOf("month")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
         break;
       case "year":
-        startDate = new Date(today.getFullYear(), 0, 1);
-        endDate = new Date(today.getFullYear() + 1, 0, 1);
+        startDate = moment().startOf("year").format("YYYY-MM-DD");
+        endDate = moment().endOf("year").add(1, "day").format("YYYY-MM-DD");
+        previousStartDate = moment()
+          .subtract(1, "year")
+          .startOf("year")
+          .format("YYYY-MM-DD");
+        previousEndDate = moment()
+          .subtract(1, "year")
+          .endOf("year")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
         break;
       default:
         throw new Error("Invalid time range");
     }
 
-    const {data, error} = await supabase
+    const {data: currentData, error: currentError} = await supabase
+      .from("users")
+      .select("id, deviceToken, is_active")
+      .eq("restaurant_id", restaurantId)
+      .gte("created_at", startDate)
+      .lt("created_at", endDate);
+
+    if (currentError) {
+      throw currentError;
+    }
+
+    const {data: previousData, error: previousError} = await supabase
       .from("users")
       .select("id, deviceToken")
       .eq("restaurant_id", restaurantId)
-      .gte("created_at", startDate.toISOString())
-      .lt("created_at", endDate.toISOString());
+      .gte("created_at", previousStartDate)
+      .lt("created_at", previousEndDate);
 
-    if (error) {
-      throw error;
-    } else {
-      return data;
+    if (previousError) {
+      throw previousError;
     }
+
+    return {currentData, previousData};
   } catch (error) {
     console.error("Error fetching data:", error);
     throw error;
@@ -106,12 +182,12 @@ export async function getVisitorApi(timeRange) {
 
     switch (timeRange) {
       case "week":
-        startDate = moment.utc().startOf("isoWeek").toISOString();
-        endDate = moment.utc().endOf("isoWeek").toISOString();
+        startDate = moment().subtract(7, "day").format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
         break;
       case "year":
-        startDate = moment.utc().startOf("year").toISOString();
-        endDate = moment.utc().endOf("year").toISOString();
+        startDate = moment().subtract(12, "month").format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
         break;
       default:
         throw new Error("Invalid time range");
@@ -127,6 +203,79 @@ export async function getVisitorApi(timeRange) {
     if (error) {
       throw error;
     } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
+export async function getUserChartApi(timeRange) {
+  try {
+    let startDate;
+    let endDate;
+
+    switch (timeRange) {
+      case "week":
+        startDate = moment().subtract(7, "day").format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        break;
+      case "year":
+        startDate = moment().subtract(12, "month").format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        break;
+      default:
+        throw new Error("Invalid time range");
+    }
+
+    const {data, error} = await supabase
+      .from("users")
+      .select("created_at, id, deviceToken")
+      .eq("restaurant_id", restaurantId)
+      .gte("created_at", startDate)
+      .lt("created_at", endDate);
+
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
+export async function getRevenueChartApi(timeRange) {
+  try {
+    let startDate;
+    let endDate;
+
+    switch (timeRange) {
+      case "week":
+        startDate = moment().subtract(7, "day").format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        break;
+      case "year":
+        startDate = moment().subtract(12, "month").format("YYYY-MM-DD");
+        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        break;
+      default:
+        throw new Error("Invalid time range");
+    }
+
+    const {data, error} = await supabase
+      .from("orders")
+      .select("created_at, id, grand_amount, total_amount, tax_amount, fooditem_ids")
+      .eq("restaurant_id", restaurantId)
+      .gte("created_at", startDate)
+      .lt("created_at", endDate);
+
+    if (error) {
+      throw error;
+    } else {
+      console.log("data", data);
       return data;
     }
   } catch (error) {
