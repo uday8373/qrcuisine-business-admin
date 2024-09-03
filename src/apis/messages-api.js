@@ -2,6 +2,26 @@ import supabase from "@/configs/supabase";
 
 const restaurantId = localStorage.getItem("restaurants_id");
 
+// Initialize real-time updates for messages
+export function subscribeToMessages(callback) {
+  const channel = supabase
+    .channel(`messages:restaurant_id=eq.${restaurantId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `restaurant_id=eq.${restaurantId}`,
+      },
+      (payload) => {
+        callback("INSERT", payload.new);
+      },
+    )
+    .subscribe();
+
+  return channel;
+}
 export async function getMessageApis(searchQuery) {
   const today = new Date();
   const tomorrow = new Date(today);

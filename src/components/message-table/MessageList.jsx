@@ -10,11 +10,14 @@ export default function MessageList({filteredMessages}) {
       messagesEndRef.current.scrollIntoView({behavior: "smooth"});
     }
   }, [filteredMessages]);
+  useEffect(() => {
+    console.log("Filtered messages in MessageList:", filteredMessages);
+  }, [filteredMessages]);
 
   return (
     <div className="w-full max-h-96 pt-5 pb-5 overflow-y-auto">
-      {filteredMessages.map((msg, index) => (
-        <div key={index}>
+      {filteredMessages.map((msg) => (
+        <div key={msg.id}>
           <ChatBubble message={msg} />
         </div>
       ))}
