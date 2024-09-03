@@ -70,6 +70,8 @@ export function Tables() {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
 
+  const isTesting = false;
+
   const resetFormData = () => {
     setFormData({numberOfTable: "", table_no: ""});
   };
@@ -84,7 +86,12 @@ export function Tables() {
   };
 
   useEffect(() => {
-    fetchTablesData();
+    if (isTesting) {
+      setTableData([]);
+      setLoading(false);
+    } else {
+      fetchTablesData();
+    }
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
@@ -300,129 +307,138 @@ export function Tables() {
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                {tableData.map((table, index) => {
-                  const className = `py-3 px-5 ${
-                    index === tableData.length - 1 ? "" : "border-b border-blue-gray-50"
-                  }`;
+              <tbody
+                className={`${tableData.length === 0 && "h-[300px]"} relative w-full}`}>
+                {tableData.length === 0 ? (
+                  <div className="w-full absolute flex justify-center items-center h-full">
+                    <Typography variant="h6" color="blue-gray" className="font-normal">
+                      No Table Found
+                    </Typography>
+                  </div>
+                ) : (
+                  tableData.map((table, index) => {
+                    const className = `py-3 px-5 ${
+                      index === tableData.length - 1 ? "" : "border-b border-blue-gray-50"
+                    }`;
 
-                  return (
-                    <tr key={index}>
-                      <td className={className}>
-                        <div className="flex items-center gap-3">
+                    return (
+                      <tr key={index}>
+                        <td className={className}>
+                          <div className="flex items-center gap-3">
+                            <Chip
+                              variant="ghost"
+                              color="gray"
+                              size="lg"
+                              value={table?.table_no}
+                              className="text-sm font-bold"
+                            />
+                          </div>
+                        </td>
+                        <td className={className}>
                           <Chip
                             variant="ghost"
-                            color="gray"
-                            size="lg"
-                            value={table?.table_no}
-                            className="text-sm font-bold"
+                            color={table?.is_booked ? "orange" : "green"}
+                            value={table?.is_booked ? "Booked" : "Available"}
+                            className="justify-center items-center w-24"
                           />
-                        </div>
-                      </td>
-                      <td className={className}>
-                        <Chip
-                          variant="ghost"
-                          color={table?.is_booked ? "orange" : "green"}
-                          value={table?.is_booked ? "Booked" : "Available"}
-                          className="justify-center items-center w-24"
-                        />
-                      </td>
-                      <td className={className}>
-                        <Chip
-                          variant="ghost"
-                          size="md"
-                          color={
-                            table?.order_id?.status_id?.sorting === 1
-                              ? "blue"
-                              : table?.order_id?.status_id?.sorting === 2
-                              ? "cyan"
-                              : table?.order_id?.status_id?.sorting === 3
-                              ? "orange"
-                              : table?.order_id?.status_id?.sorting === 4
-                              ? "green"
-                              : "gray"
-                          }
-                          value={
-                            table?.order_id?.status_id?.title
-                              ? table?.order_id?.status_id?.title
-                              : "N/A"
-                          }
-                          className="flex justify-center"
-                        />
-                      </td>
-                      <td className={className}>
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal">
-                          {table?.persons ? `${table?.persons} persons` : "N/A"}
-                        </Typography>
-                      </td>
-                      <td className={className}>
-                        {table?.order_id?.user_id ? (
-                          <div className="flex flex-col gap-1">
+                        </td>
+                        <td className={className}>
+                          <Chip
+                            variant="ghost"
+                            size="md"
+                            color={
+                              table?.order_id?.status_id?.sorting === 1
+                                ? "blue"
+                                : table?.order_id?.status_id?.sorting === 2
+                                ? "cyan"
+                                : table?.order_id?.status_id?.sorting === 3
+                                ? "orange"
+                                : table?.order_id?.status_id?.sorting === 4
+                                ? "green"
+                                : "gray"
+                            }
+                            value={
+                              table?.order_id?.status_id?.title
+                                ? table?.order_id?.status_id?.title
+                                : "N/A"
+                            }
+                            className="flex justify-center"
+                          />
+                        </td>
+                        <td className={className}>
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal">
+                            {table?.persons ? `${table?.persons} persons` : "N/A"}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          {table?.order_id?.user_id ? (
+                            <div className="flex flex-col gap-1">
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal">
+                                {table?.order_id?.user_id?.name}
+                              </Typography>{" "}
+                              <Typography
+                                variant="small"
+                                color="blue"
+                                className="font-normal">
+                                +91 {table?.order_id?.user_id?.mobile}
+                              </Typography>
+                            </div>
+                          ) : (
                             <Typography
                               variant="small"
                               color="blue-gray"
                               className="font-normal">
-                              {table?.order_id?.user_id?.name}
-                            </Typography>{" "}
+                              N/A
+                            </Typography>
+                          )}
+                        </td>
+                        <td className={className}>
+                          <Chip
+                            variant="ghost"
+                            color={table?.is_available ? "green" : "red"}
+                            value={table?.is_available ? "Available" : "Unavailable"}
+                            className="justify-center items-center w-24"
+                          />
+                        </td>
+                        <td className={className}>
+                          {table?.qr_image !== "Null" ? (
+                            <Avatar src={table?.qr_image} variant="rounded" />
+                          ) : (
                             <Typography
                               variant="small"
-                              color="blue"
+                              color="blue-gray"
                               className="font-normal">
-                              +91 {table?.order_id?.user_id?.mobile}
+                              N/A
                             </Typography>
-                          </div>
-                        ) : (
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal">
-                            N/A
-                          </Typography>
-                        )}
-                      </td>
-                      <td className={className}>
-                        <Chip
-                          variant="ghost"
-                          color={table?.is_available ? "green" : "red"}
-                          value={table?.is_available ? "Available" : "Unavailable"}
-                          className="justify-center items-center w-24"
-                        />
-                      </td>
-                      <td className={className}>
-                        {table?.qr_image !== "Null" ? (
-                          <Avatar src={table?.qr_image} variant="rounded" />
-                        ) : (
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal">
-                            N/A
-                          </Typography>
-                        )}
-                      </td>
-                      <td className={`${className} w-28 flex`}>
-                        <Tooltip content="Edit Table">
-                          <IconButton variant="text">
-                            <PencilIcon className="h-4 w-4" />
-                          </IconButton>
-                        </Tooltip>
+                          )}
+                        </td>
+                        <td className={`${className} w-28 flex`}>
+                          <Tooltip content="Edit Table">
+                            <IconButton variant="text">
+                              <PencilIcon className="h-4 w-4" />
+                            </IconButton>
+                          </Tooltip>
 
-                        <Tooltip content="Download Qr Code">
-                          <IconButton
-                            onClick={() =>
-                              handleDownload(table?.qr_image, table?.table_no)
-                            }
-                            variant="text">
-                            <CloudArrowDownIcon className="h-4 w-4" />
-                          </IconButton>
-                        </Tooltip>
-                      </td>
-                    </tr>
-                  );
-                })}
+                          <Tooltip content="Download Qr Code">
+                            <IconButton
+                              onClick={() =>
+                                handleDownload(table?.qr_image, table?.table_no)
+                              }
+                              variant="text">
+                              <CloudArrowDownIcon className="h-4 w-4" />
+                            </IconButton>
+                          </Tooltip>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           )}
