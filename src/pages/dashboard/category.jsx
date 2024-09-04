@@ -61,6 +61,7 @@ export function Category() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const isTesting = false;
 
   const fetchCategoryData = async () => {
     const categoryResult = await getAllCategories(
@@ -79,8 +80,13 @@ export function Category() {
   };
 
   useEffect(() => {
-    fetchCategoryData();
-  }, [maxRow, currentPage, loading, activeTab, searchQuery]);
+    if (isTesting) {
+      setCategoryData([]);
+      setLoading(false);
+    } else {
+      fetchCategoryData();
+    }
+  }, [isTesting, maxRow, currentPage, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
 

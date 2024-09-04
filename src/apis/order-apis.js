@@ -10,9 +10,14 @@ export async function getAllOrders(page, pageSize, status, searchQuery) {
       .order("created_at", {ascending: false})
       .range((page - 1) * pageSize, page * pageSize - 1)
       .limit(pageSize);
-    if (status !== "all") {
-      query = query.eq("is_delivered", status === "true");
+
+    // Adjusted to correctly filter based on status
+    if (status === "undelivered") {
+      query = query.eq("is_delivered", true); // Orders that are delivered
+    } else if (status === "delivered") {
+      query = query.eq("is_delivered", false); // Orders that are not delivered
     }
+
     if (searchQuery) {
       query = query.ilike("order_id", `%${searchQuery}%`);
     }

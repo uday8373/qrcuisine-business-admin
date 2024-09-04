@@ -78,6 +78,7 @@ export function FoodItems() {
   const [errors, setErrors] = useState({});
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const isTesting = false;
 
   const resetFormData = () => {
     setFormData({
@@ -109,8 +110,13 @@ export function FoodItems() {
   };
 
   useEffect(() => {
-    fetchFoodData();
-    fetchCategoryData();
+    if (isTesting) {
+      setFoodData([]);
+      setLoading(false);
+    } else {
+      fetchFoodData();
+      fetchCategoryData();
+    }
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
   const totalPages = Math.ceil(maxItems / maxRow);
 
@@ -326,134 +332,143 @@ export function FoodItems() {
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                {foodData.map(
-                  (
-                    {
-                      food_name,
-                      quantity,
-                      price,
-                      category,
-                      is_veg,
-                      isSpecial,
-                      is_available,
-                      image,
-                      id,
-                    },
-                    index,
-                  ) => {
-                    const isLast = index === foodData.length - 1;
-                    const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
+              <tbody
+                className={`${foodData.length === 0 && "h-[300px]"} relative w-full`}>
+                {foodData.length === 0 ? (
+                  <div className="w-full absolute flex justify-center items-center h-full">
+                    <Typography variant="h6" color="blue-gray" className="font-normal">
+                      No FoodItem Found
+                    </Typography>
+                  </div>
+                ) : (
+                  foodData.map(
+                    (
+                      {
+                        food_name,
+                        quantity,
+                        price,
+                        category,
+                        is_veg,
+                        isSpecial,
+                        is_available,
+                        image,
+                        id,
+                      },
+                      index,
+                    ) => {
+                      const isLast = index === foodData.length - 1;
+                      const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
-                    return (
-                      <tr key={index}>
-                        <td className={classes}>
-                          <div className="flex items-center gap-3">
-                            <Avatar src={image} alt={food_name} size="sm" />
-                            <div className="flex flex-col">
+                      return (
+                        <tr key={index}>
+                          <td className={classes}>
+                            <div className="flex items-center gap-3">
+                              <Avatar src={image} alt={food_name} size="sm" />
+                              <div className="flex flex-col">
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal">
+                                  {food_name}
+                                </Typography>
+                              </div>
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <Typography
+                              variant="small"
+                              color="blue-gray"
+                              className="font-normal">
+                              {category?.category_name}
+                            </Typography>
+                          </td>
+                          <td className={classes}>
+                            <div className="flex gap-2">
                               <Typography
                                 variant="small"
                                 color="blue-gray"
                                 className="font-normal">
-                                {food_name}
+                                ₹ {price}.00
+                              </Typography>
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal">
+                                ( {quantity} )
                               </Typography>
                             </div>
-                          </div>
-                        </td>
-                        <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal">
-                            {category?.category_name}
-                          </Typography>
-                        </td>
-                        <td className={classes}>
-                          <div className="flex gap-2">
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal">
-                              ₹ {price}.00
-                            </Typography>
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal">
-                              ( {quantity} )
-                            </Typography>
-                          </div>
-                        </td>
-                        <td className={classes}>
-                          <div className="w-max">
-                            <Chip
-                              variant="ghost"
-                              size="sm"
-                              value={is_veg ? "Veg" : "Non Veg"}
-                              color={is_veg ? "green" : "deep-orange"}
-                              className="w-24 justify-center"
-                            />
-                          </div>
-                        </td>
-                        <td className={classes}>
-                          <div className="w-max">
-                            <Chip
-                              variant="ghost"
-                              size="sm"
-                              value={isSpecial ? "Special" : "None"}
-                              color={isSpecial ? "red" : "blue-gray"}
-                              className="w-24 justify-center"
-                            />
-                          </div>
-                        </td>
-                        <td className={classes}>
-                          <div className="w-max">
-                            <Chip
-                              variant="ghost"
-                              size="sm"
-                              value={is_available ? "Available" : "Unavailable"}
-                              color={is_available ? "green" : "blue-gray"}
-                              className="w-24 justify-center"
-                            />
-                          </div>
-                        </td>
+                          </td>
+                          <td className={classes}>
+                            <div className="w-max">
+                              <Chip
+                                variant="ghost"
+                                size="sm"
+                                value={is_veg ? "Veg" : "Non Veg"}
+                                color={is_veg ? "green" : "deep-orange"}
+                                className="w-24 justify-center"
+                              />
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <div className="w-max">
+                              <Chip
+                                variant="ghost"
+                                size="sm"
+                                value={isSpecial ? "Special" : "None"}
+                                color={isSpecial ? "red" : "blue-gray"}
+                                className="w-24 justify-center"
+                              />
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <div className="w-max">
+                              <Chip
+                                variant="ghost"
+                                size="sm"
+                                value={is_available ? "Available" : "Unavailable"}
+                                color={is_available ? "green" : "blue-gray"}
+                                className="w-24 justify-center"
+                              />
+                            </div>
+                          </td>
 
-                        <td className={`${classes} w-28`}>
-                          <Tooltip content="Edit Food">
-                            <IconButton
-                              onClick={() =>
-                                handleUpdate({
-                                  id: id,
-                                  title: food_name,
-                                  status: is_available,
-                                  foodType: is_veg,
-                                  category: category.id,
-                                  price: price,
-                                  isSpecial: isSpecial,
-                                  image: image,
-                                  quantity: quantity,
-                                })
-                              }
-                              variant="text">
-                              <PencilIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
+                          <td className={`${classes} w-28`}>
+                            <Tooltip content="Edit Food">
+                              <IconButton
+                                onClick={() =>
+                                  handleUpdate({
+                                    id: id,
+                                    title: food_name,
+                                    status: is_available,
+                                    foodType: is_veg,
+                                    category: category.id,
+                                    price: price,
+                                    isSpecial: isSpecial,
+                                    image: image,
+                                    quantity: quantity,
+                                  })
+                                }
+                                variant="text">
+                                <PencilIcon className="h-4 w-4" />
+                              </IconButton>
+                            </Tooltip>
 
-                          <Tooltip content="Delete Food">
-                            <IconButton
-                              onClick={() =>
-                                handleDelete({
-                                  id: id,
-                                })
-                              }
-                              variant="text">
-                              <TrashIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
-                        </td>
-                      </tr>
-                    );
-                  },
+                            <Tooltip content="Delete Food">
+                              <IconButton
+                                onClick={() =>
+                                  handleDelete({
+                                    id: id,
+                                  })
+                                }
+                                variant="text">
+                                <TrashIcon className="h-4 w-4" />
+                              </IconButton>
+                            </Tooltip>
+                          </td>
+                        </tr>
+                      );
+                    },
+                  )
                 )}
               </tbody>
             </table>

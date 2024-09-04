@@ -20,6 +20,7 @@ import {
   MenuItem,
   MenuList,
   Menu,
+  Spinner,
 } from "@material-tailwind/react";
 import {ChevronDownIcon} from "lucide-react";
 import React, {useEffect, useState} from "react";
@@ -31,7 +32,7 @@ const TABS = [
   },
   {
     label: "Delivered",
-    value: "true",
+    value: "delivered",
   },
   {
     label: "Undelivered",
@@ -66,6 +67,7 @@ export function Orders() {
 
   const openDrawer = () => setOpen(true);
   const closeDrawer = () => setOpen(false);
+  const isTesting = false;
 
   const fetchOrderData = async () => {
     const orderResult = await getAllOrders(currentPage, maxRow, activeTab, searchQuery);
@@ -91,9 +93,14 @@ export function Orders() {
   };
 
   useEffect(() => {
-    fetchOrderData();
-    fetchWaitersData();
-    fetchStatusesData();
+    if (isTesting) {
+      setOrderData([]);
+      setLoading(false);
+    } else {
+      fetchOrderData();
+      fetchWaitersData();
+      fetchStatusesData();
+    }
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
@@ -198,275 +205,299 @@ export function Orders() {
           </div>
         </CardHeader>
         <CardBody className="overflow-scroll px-0">
-          <table className="mt-4 w-full min-w-max table-auto text-left">
-            <thead>
-              <tr>
-                {TABLE_HEAD.map((head, index) => (
-                  <th
-                    key={head}
-                    className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
-                      {head}{" "}
-                      {index !== TABLE_HEAD.length - 1 && (
-                        <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                      )}
-                    </Typography>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {orderData.map(
-                (
-                  {
-                    id,
-                    created_at,
-                    table_id,
-                    fooditem_ids,
-                    user_id,
-                    grand_amount,
-                    waiter_id,
-                    instructions,
-                    preparation_time,
-                    status_id,
-                    order_id,
-                    is_delivered,
-                    tax_amount,
-                    total_amount,
-                  },
-                  index,
-                ) => {
-                  const isLast = index === orderData.length - 1;
-                  const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
-
-                  return (
-                    <tr key={index}>
-                      <td className={classes}>
-                        <div className="flex items-center gap-3">
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal opacity-70">
-                            {order_id}
-                          </Typography>
-                        </div>
-                      </td>
-                      <td className={classes}>
-                        <div className="flex flex-col">
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal">
-                            {new Date(created_at)
-                              .toLocaleDateString("en-IN", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })
-                              .replace(/-/g, " ")}
-                          </Typography>
-                        </div>
-                      </td>
-                      <td className={classes}>
-                        <div className="flex items-center gap-3">
-                          <Chip color="orange" value={table_id.table_no} />
-                        </div>
-                      </td>
-
-                      <td className={`${classes} flex flex-col gap-1`}>
-                        {fooditem_ids.slice(0, 3).map((food, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal opacity-70">
-                              {food.food_name}
-                            </Typography>
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal opacity-70">
-                              ({food.quantity})
-                            </Typography>
-                          </div>
-                        ))}
-                        {fooditem_ids.length > 3 && (
-                          <h2
-                            onClick={() =>
-                              handleSelectOrder({
-                                id: id,
-                                created_at: created_at,
-                                order_id: order_id,
-                                status_id: status_id,
-                                is_delivered: is_delivered,
-                                user_id: user_id,
-                                fooditem_ids: fooditem_ids,
-                                instructions: instructions,
-                                preparation_time: preparation_time,
-                                waiter_id: waiter_id,
-                                tax_amount: tax_amount,
-                                total_amount: total_amount,
-                                grand_amount: grand_amount,
-                              })
-                            }
-                            className="text-md underline underline-offset-2 text-orange-600 decoration-dotted cursor-pointer">
-                            see all
-                          </h2>
+          {loading ? (
+            <div className="flex w-full h-[350px] justify-center items-center">
+              <Spinner className="h-8 w-8" />
+            </div>
+          ) : (
+            <table className="mt-4 w-full min-w-max table-auto text-left">
+              <thead>
+                <tr>
+                  {TABLE_HEAD.map((head, index) => (
+                    <th
+                      key={head}
+                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
+                        {head}{" "}
+                        {index !== TABLE_HEAD.length - 1 && (
+                          <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
                         )}
-                      </td>
-                      <td className={classes}>
-                        <div className="flex items-center gap-3">
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal opacity-70">
-                            ₹ {grand_amount.toFixed(2)}
-                          </Typography>
-                        </div>
-                      </td>
-                      <td className={classes}>
-                        {waiter_id?.name ? (
-                          <Chip
-                            variant="ghost"
-                            size="md"
-                            color="green"
-                            value={waiter_id?.name}
-                            className="flex justify-center"
-                          />
-                        ) : (
-                          <Menu size="xs">
-                            <MenuHandler>
+                      </Typography>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody
+                className={`${orderData.length === 0 && "h-[300px]"} relative w-full}`}>
+                {orderData.length === 0 ? (
+                  <div className="w-full absolute flex justify-center items-center h-full">
+                    <Typography variant="h6" color="blue-gray" className="font-normal">
+                      No Order Found
+                    </Typography>
+                  </div>
+                ) : (
+                  orderData.map(
+                    (
+                      {
+                        id,
+                        created_at,
+                        table_id,
+                        fooditem_ids,
+                        user_id,
+                        grand_amount,
+                        waiter_id,
+                        instructions,
+                        preparation_time,
+                        status_id,
+                        order_id,
+                        is_delivered,
+                        tax_amount,
+                        total_amount,
+                      },
+                      index,
+                    ) => {
+                      const isLast = index === orderData.length - 1;
+                      const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
+
+                      return (
+                        <tr key={index}>
+                          <td className={classes}>
+                            <div className="flex items-center gap-3">
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal opacity-70">
+                                {order_id}
+                              </Typography>
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <div className="flex flex-col">
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal">
+                                {new Date(created_at)
+                                  .toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                  .replace(/-/g, " ")}
+                              </Typography>
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <div className="flex items-center gap-3">
+                              <Chip color="orange" value={table_id.table_no} />
+                            </div>
+                          </td>
+
+                          <td className={`${classes} flex flex-col gap-1`}>
+                            {fooditem_ids.slice(0, 3).map((food, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal opacity-70">
+                                  {food.food_name}
+                                </Typography>
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal opacity-70">
+                                  ({food.quantity})
+                                </Typography>
+                              </div>
+                            ))}
+                            {fooditem_ids.length > 3 && (
+                              <h2
+                                onClick={() =>
+                                  handleSelectOrder({
+                                    id: id,
+                                    created_at: created_at,
+                                    order_id: order_id,
+                                    status_id: status_id,
+                                    is_delivered: is_delivered,
+                                    user_id: user_id,
+                                    fooditem_ids: fooditem_ids,
+                                    instructions: instructions,
+                                    preparation_time: preparation_time,
+                                    waiter_id: waiter_id,
+                                    tax_amount: tax_amount,
+                                    total_amount: total_amount,
+                                    grand_amount: grand_amount,
+                                  })
+                                }
+                                className="text-md underline underline-offset-2 text-orange-600 decoration-dotted cursor-pointer">
+                                see all
+                              </h2>
+                            )}
+                          </td>
+                          <td className={classes}>
+                            <div className="flex items-center gap-3">
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal opacity-70">
+                                ₹ {grand_amount.toFixed(2)}
+                              </Typography>
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            {waiter_id?.name ? (
                               <Chip
-                                icon={<ChevronDownIcon size={20} />}
                                 variant="ghost"
                                 size="md"
-                                color="gray"
-                                value="Assigned a waiter"
-                                className="flex justify-center cursor-pointer"
+                                color="green"
+                                value={waiter_id?.name}
+                                className="flex justify-center"
                               />
-                            </MenuHandler>
-                            <MenuList>
-                              {waitersData.map((waiter, index) => (
-                                <MenuItem
-                                  key={index}
-                                  onClick={() => handleWaiterChange(id, waiter.id)}>
-                                  {waiter?.name}
-                                </MenuItem>
-                              ))}
-                            </MenuList>
-                          </Menu>
-                        )}
-                      </td>
-                      <td className={classes}>
-                        <Menu size="xs">
-                          <MenuHandler>
-                            <Chip
-                              icon={<ChevronDownIcon size={20} />}
-                              variant="ghost"
-                              size="md"
-                              color="blue"
-                              value={`${preparation_time} Minutes`}
-                              className="flex justify-center cursor-pointer "
-                            />
-                          </MenuHandler>
-
-                          <MenuList>
-                            {[10, 20, 30, 40].map((time, index) => (
-                              <MenuItem
-                                key={index}
-                                onClick={() =>
-                                  handlePreparationTimeChange(id, time, preparation_time)
-                                }>
-                                Add {time} minutes
-                              </MenuItem>
-                            ))}
-                          </MenuList>
-                        </Menu>
-                      </td>
-                      <td className={classes}>
-                        <Menu size="xs">
-                          <MenuHandler>
-                            <Chip
-                              icon={
-                                status_id?.sorting !== 4 && <ChevronDownIcon size={20} />
-                              }
-                              variant="ghost"
-                              size="md"
-                              color={
-                                status_id?.sorting === 1
-                                  ? "blue"
-                                  : status_id?.sorting === 2
-                                  ? "cyan"
-                                  : status_id?.sorting === 3
-                                  ? "orange"
-                                  : "green"
-                              }
-                              value={status_id?.title}
-                              className="flex justify-center cursor-pointer"
-                            />
-                          </MenuHandler>
-                          {status_id.sorting !== 4 && (
-                            <MenuList>
-                              {statusesData &&
-                                statusesData
-                                  .filter(
-                                    (status) =>
-                                      (status_id.sorting === 1 && status.sorting === 2) ||
-                                      (status_id.sorting === 2 && status.sorting === 3) ||
-                                      (status_id.sorting === 3 && status.sorting === 4),
-                                  )
-                                  .map((status, index) => (
+                            ) : (
+                              <Menu size="xs">
+                                <MenuHandler>
+                                  <Chip
+                                    icon={<ChevronDownIcon size={20} />}
+                                    variant="ghost"
+                                    size="md"
+                                    color="gray"
+                                    value="Assigned a waiter"
+                                    className="flex justify-center cursor-pointer"
+                                  />
+                                </MenuHandler>
+                                <MenuList>
+                                  {waitersData.map((waiter, index) => (
                                     <MenuItem
                                       key={index}
-                                      onClick={() =>
-                                        handleStatusChange(
-                                          id,
-                                          status.id,
-                                          status_id.sorting,
-                                        )
-                                      }>
-                                      {status.title}
+                                      onClick={() => handleWaiterChange(id, waiter.id)}>
+                                      {waiter?.name}
                                     </MenuItem>
                                   ))}
-                            </MenuList>
-                          )}
-                        </Menu>
-                      </td>
+                                </MenuList>
+                              </Menu>
+                            )}
+                          </td>
+                          <td className={classes}>
+                            <Menu size="xs">
+                              <MenuHandler>
+                                <Chip
+                                  icon={<ChevronDownIcon size={20} />}
+                                  variant="ghost"
+                                  size="md"
+                                  color="blue"
+                                  value={`${preparation_time} Minutes`}
+                                  className="flex justify-center cursor-pointer "
+                                />
+                              </MenuHandler>
 
-                      <td className={classes}>
-                        <Tooltip content="View Order">
-                          <IconButton
-                            onClick={() =>
-                              handleSelectOrder({
-                                id: id,
-                                created_at: created_at,
-                                order_id: order_id,
-                                status_id: status_id,
-                                is_delivered: is_delivered,
-                                user_id: user_id,
-                                fooditem_ids: fooditem_ids,
-                                instructions: instructions,
-                                preparation_time: preparation_time,
-                                waiter_id: waiter_id,
-                                tax_amount: tax_amount,
-                                total_amount: total_amount,
-                                grand_amount: grand_amount,
-                              })
-                            }
-                            variant="text">
-                            <EyeIcon className="h-4 w-4" />
-                          </IconButton>
-                        </Tooltip>
-                      </td>
-                    </tr>
-                  );
-                },
-              )}
-            </tbody>
-          </table>
+                              <MenuList>
+                                {[10, 20, 30, 40].map((time, index) => (
+                                  <MenuItem
+                                    key={index}
+                                    onClick={() =>
+                                      handlePreparationTimeChange(
+                                        id,
+                                        time,
+                                        preparation_time,
+                                      )
+                                    }>
+                                    Add {time} minutes
+                                  </MenuItem>
+                                ))}
+                              </MenuList>
+                            </Menu>
+                          </td>
+                          <td className={classes}>
+                            <Menu size="xs">
+                              <MenuHandler>
+                                <Chip
+                                  icon={
+                                    status_id?.sorting !== 4 && (
+                                      <ChevronDownIcon size={20} />
+                                    )
+                                  }
+                                  variant="ghost"
+                                  size="md"
+                                  color={
+                                    status_id?.sorting === 1
+                                      ? "blue"
+                                      : status_id?.sorting === 2
+                                      ? "cyan"
+                                      : status_id?.sorting === 3
+                                      ? "orange"
+                                      : "green"
+                                  }
+                                  value={status_id?.title}
+                                  className="flex justify-center cursor-pointer"
+                                />
+                              </MenuHandler>
+                              {status_id.sorting !== 4 && (
+                                <MenuList>
+                                  {statusesData &&
+                                    statusesData
+                                      .filter(
+                                        (status) =>
+                                          (status_id.sorting === 1 &&
+                                            status.sorting === 2) ||
+                                          (status_id.sorting === 2 &&
+                                            status.sorting === 3) ||
+                                          (status_id.sorting === 3 &&
+                                            status.sorting === 4),
+                                      )
+                                      .map((status, index) => (
+                                        <MenuItem
+                                          key={index}
+                                          onClick={() =>
+                                            handleStatusChange(
+                                              id,
+                                              status.id,
+                                              status_id.sorting,
+                                            )
+                                          }>
+                                          {status.title}
+                                        </MenuItem>
+                                      ))}
+                                </MenuList>
+                              )}
+                            </Menu>
+                          </td>
+
+                          <td className={classes}>
+                            <Tooltip content="View Order">
+                              <IconButton
+                                onClick={() =>
+                                  handleSelectOrder({
+                                    id: id,
+                                    created_at: created_at,
+                                    order_id: order_id,
+                                    status_id: status_id,
+                                    is_delivered: is_delivered,
+                                    user_id: user_id,
+                                    fooditem_ids: fooditem_ids,
+                                    instructions: instructions,
+                                    preparation_time: preparation_time,
+                                    waiter_id: waiter_id,
+                                    tax_amount: tax_amount,
+                                    total_amount: total_amount,
+                                    grand_amount: grand_amount,
+                                  })
+                                }
+                                variant="text">
+                                <EyeIcon className="h-4 w-4" />
+                              </IconButton>
+                            </Tooltip>
+                          </td>
+                        </tr>
+                      );
+                    },
+                  )
+                )}
+              </tbody>
+            </table>
+          )}
         </CardBody>
         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">

@@ -1,9 +1,8 @@
-import {Avatar, Badge, IconButton, Typography} from "@material-tailwind/react";
+import {IconButton, Typography} from "@material-tailwind/react";
 import React from "react";
 import {PiChecksBold} from "react-icons/pi";
 
 const ChatBubble = ({message, isSender}) => {
-  console.log("message", message);
   return (
     <div>
       <div
@@ -47,7 +46,9 @@ const ChatBubble = ({message, isSender}) => {
           <div className="w-full border-t-2 border-gray-500"></div>
 
           <div className="min-w-fit">
-            <span className="mx-4  text-gray-900">Sessions End</span>
+            <Typography variant="small" color="deep-orange" className="font-normal mx-4 ">
+              Sessions End
+            </Typography>
           </div>
           <div className="w-full border-t-2 border-gray-500"></div>
         </div>
