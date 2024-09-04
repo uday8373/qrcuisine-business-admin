@@ -37,7 +37,7 @@ export async function updateOrder(value) {
       waiter_id: value.waiter_id,
     };
 
-    if (value.sorting === 4) {
+    if (value.sorting === 3) {
       updates.is_delivered = true;
     }
 

@@ -65,7 +65,7 @@ export async function getOrdersApi(timeRange) {
 
     const {data: currentData, error: currentError} = await supabase
       .from("orders")
-      .select("id, grand_amount, created_at")
+      .select("id, grand_amount, created_at, is_delivered")
       .eq("restaurant_id", restaurantId)
       .gte("created_at", currentStartDate)
       .lt("created_at", currentEndDate);
@@ -76,7 +76,7 @@ export async function getOrdersApi(timeRange) {
 
     const {data: previousData, error: previousError} = await supabase
       .from("orders")
-      .select("id, grand_amount, created_at")
+      .select("id, grand_amount, created_at, is_delivered")
       .eq("restaurant_id", restaurantId)
       .gte("created_at", previousStartDate)
       .lt("created_at", previousEndDate);
@@ -182,12 +182,12 @@ export async function getVisitorApi(timeRange) {
 
     switch (timeRange) {
       case "week":
-        startDate = moment().subtract(7, "day").format("YYYY-MM-DD");
+        startDate = moment().subtract(6, "day").format("YYYY-MM-DD");
         endDate = moment().add(1, "day").format("YYYY-MM-DD");
         break;
       case "year":
-        startDate = moment().subtract(12, "month").format("YYYY-MM-DD");
-        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        startDate = moment().subtract(11, "months").startOf("month").format("YYYY-MM-DD");
+        endDate = moment().endOf("month").format("YYYY-MM-DD");
         break;
       default:
         throw new Error("Invalid time range");
@@ -218,17 +218,16 @@ export async function getUserChartApi(timeRange) {
 
     switch (timeRange) {
       case "week":
-        startDate = moment().subtract(7, "day").format("YYYY-MM-DD");
+        startDate = moment().subtract(6, "day").format("YYYY-MM-DD");
         endDate = moment().add(1, "day").format("YYYY-MM-DD");
         break;
       case "year":
-        startDate = moment().subtract(12, "month").format("YYYY-MM-DD");
-        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        startDate = moment().subtract(11, "months").startOf("month").format("YYYY-MM-DD");
+        endDate = moment().endOf("month").format("YYYY-MM-DD");
         break;
       default:
         throw new Error("Invalid time range");
     }
-
     const {data, error} = await supabase
       .from("users")
       .select("created_at, id, deviceToken")
@@ -254,12 +253,12 @@ export async function getRevenueChartApi(timeRange) {
 
     switch (timeRange) {
       case "week":
-        startDate = moment().subtract(7, "day").format("YYYY-MM-DD");
+        startDate = moment().subtract(6, "day").format("YYYY-MM-DD");
         endDate = moment().add(1, "day").format("YYYY-MM-DD");
         break;
       case "year":
-        startDate = moment().subtract(12, "month").format("YYYY-MM-DD");
-        endDate = moment().add(1, "day").format("YYYY-MM-DD");
+        startDate = moment().subtract(11, "months").startOf("month").format("YYYY-MM-DD");
+        endDate = moment().endOf("month").format("YYYY-MM-DD");
         break;
       default:
         throw new Error("Invalid time range");
@@ -267,7 +266,9 @@ export async function getRevenueChartApi(timeRange) {
 
     const {data, error} = await supabase
       .from("orders")
-      .select("created_at, id, grand_amount, total_amount, tax_amount, fooditem_ids")
+      .select(
+        "created_at, id, grand_amount, total_amount, tax_amount, fooditem_ids, is_delivered",
+      )
       .eq("restaurant_id", restaurantId)
       .gte("created_at", startDate)
       .lt("created_at", endDate);
@@ -275,7 +276,6 @@ export async function getRevenueChartApi(timeRange) {
     if (error) {
       throw error;
     } else {
-      console.log("data", data);
       return data;
     }
   } catch (error) {
