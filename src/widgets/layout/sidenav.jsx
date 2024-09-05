@@ -1,10 +1,16 @@
 import PropTypes from "prop-types";
 import {Link, NavLink} from "react-router-dom";
 import {XMarkIcon} from "@heroicons/react/24/outline";
-import {Button, IconButton, Typography} from "@material-tailwind/react";
+import {Button, Chip, IconButton, Typography} from "@material-tailwind/react";
 import {useMaterialTailwindController, setOpenSidenav} from "@/context";
+import {useEffect, useState} from "react";
+import {getOrdersCounts} from "@/apis/order-apis";
+import supabase from "@/configs/supabase";
+import {getTableCounts} from "@/apis/tables-apis";
 
 export function Sidenav({routes}) {
+  const [newOrder, setNewOrder] = useState(0);
+  const [bookedCount, setBookedCount] = useState(0);
   const [controller, dispatch] = useMaterialTailwindController();
   const {sidenavColor, sidenavType, openSidenav} = controller;
   const sidenavTypes = {
@@ -12,6 +18,69 @@ export function Sidenav({routes}) {
     white: "bg-white shadow-sm",
     transparent: "bg-transparent",
   };
+
+  const fetchOrdersCount = async () => {
+    const result = await getOrdersCounts();
+    if (result) {
+      setNewOrder(result.unAvailable);
+    }
+  };
+
+  const fetchBookedTablesCount = async () => {
+    console.log("callling booked tables");
+    const result = await getTableCounts();
+    if (result) {
+      setBookedCount(result.bookedTables);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrdersCount();
+    const restaurantId = localStorage.getItem("restaurants_id");
+    const orderSubscription = supabase
+      .channel("orders")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        async (payload) => {
+          fetchOrdersCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(orderSubscription);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchBookedTablesCount();
+    const restaurantId = localStorage.getItem("restaurants_id");
+    const tableSubscription = supabase
+      .channel("tables")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tables",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        async (payload) => {
+          fetchBookedTablesCount;
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tableSubscription);
+    };
+  }, []);
 
   return (
     <aside
@@ -66,7 +135,25 @@ export function Sidenav({routes}) {
                           fullWidth>
                           {icon}
                           <Typography color="inherit" className="font-medium capitalize">
-                            {name}
+                            {name !== "orders" && name !== "tables" ? (
+                              name
+                            ) : (
+                              <>
+                                <div className="flex justify-center items-center gap-3">
+                                  {name}
+                                  {name === "orders" && newOrder !== 0 && (
+                                    <Chip color="green" value={newOrder} />
+                                  )}
+                                  {name === "tables" && bookedCount !== 0 && (
+                                    <Chip
+                                      variant="filled"
+                                      color="green"
+                                      value={bookedCount}
+                                    />
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </Typography>
                         </Button>
                       )}

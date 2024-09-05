@@ -1,5 +1,6 @@
 import React, {useEffect} from "react";
 import {Drawer, Typography, IconButton, Chip, Avatar} from "@material-tailwind/react";
+import moment from "moment";
 
 export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer}) {
   useEffect(() => {
@@ -19,7 +20,10 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
   }
   return (
     <Drawer
-      overlay={false}
+      overlay={true}
+      overlayProps={{
+        className: "fixed inset-0 h-full",
+      }}
       size={500}
       placement="right"
       open={open}
@@ -52,23 +56,10 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
           </Typography>
           <div className="flex gap-1">
             <Typography variant="paragraph" color="blue-gray" className="font-normal">
-              {new Date(selectedData?.created_at)
-                .toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-                .replace(/-/g, " ")}
+              {moment(selectedData?.created_at).format("DD MMM YYYY")}
             </Typography>
             <Typography variant="paragraph" color="blue-gray" className="font-normal">
-              at{" "}
-              {new Date(selectedData?.created_at)
-                .toLocaleTimeString("en-IN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: true,
-                })
-                .replace(/-/g, " ")}
+              at {moment(selectedData?.created_at).format("hh:mm a")}
             </Typography>
           </div>
         </div>
@@ -86,10 +77,10 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
               selectedData?.status_id?.sorting === 1
                 ? "blue"
                 : selectedData?.status_id?.sorting === 2
-                ? "cyan"
+                ? "green"
                 : selectedData?.status_id?.sorting === 3
                 ? "orange"
-                : "green"
+                : "gray"
             }
             value={selectedData?.status_id?.title}
             className="flex justify-center cursor-pointer"
@@ -103,7 +94,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             Delivered
           </Typography>
           <Chip
-            color={selectedData?.is_delivered ? "green" : "orange"}
+            color={selectedData?.is_delivered ? "green" : "gray"}
             className="flex justify-center"
             value={selectedData?.is_delivered ? "True" : "false"}
           />
@@ -119,7 +110,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             {selectedData?.user_id?.name}
           </Typography>
           <Typography variant="paragraph" color="blue" className="font-normal">
-            +91 {selectedData?.user_id?.mobile}
+            +91 {(selectedData?.user_id?.mobile || "").replace(/\d(?=\d{4})/g, "*")}
           </Typography>
         </div>
       </div>
@@ -199,7 +190,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
           <Typography variant="paragraph" color="blue-gray" className="font-semibold">
             Total
           </Typography>
-          <Typography variant="paragraph" color="deep-orange" className="font-semibold">
+          <Typography variant="lead" color="green" className="font-semibold">
             ₹ {selectedData?.grand_amount.toFixed(2)}
           </Typography>
         </div>

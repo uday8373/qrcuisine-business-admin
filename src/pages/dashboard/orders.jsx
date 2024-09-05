@@ -1,7 +1,14 @@
-import {getAllOrders, getStatuses, getWaiters, updateOrder} from "@/apis/order-apis";
+import {
+  getAllOrders,
+  getOrdersCounts,
+  getStatuses,
+  getWaiters,
+  updateOrder,
+} from "@/apis/order-apis";
 import {ViewOrderDrawer} from "@/components/order-modal/view-order";
+import supabase from "@/configs/supabase";
 import {MagnifyingGlassIcon, ChevronUpDownIcon} from "@heroicons/react/24/outline";
-import {EyeIcon} from "@heroicons/react/24/solid";
+import {EyeIcon, StopIcon} from "@heroicons/react/24/solid";
 import {
   Card,
   CardHeader,
@@ -23,22 +30,8 @@ import {
   Spinner,
 } from "@material-tailwind/react";
 import {ChevronDownIcon} from "lucide-react";
+import moment from "moment";
 import React, {useEffect, useState} from "react";
-
-const TABS = [
-  {
-    label: "All",
-    value: "all",
-  },
-  {
-    label: "Delivered",
-    value: "delivered",
-  },
-  {
-    label: "Undelivered",
-    value: "undelivered",
-  },
-];
 
 const TABLE_HEAD = [
   "Order ID",
@@ -64,10 +57,26 @@ export function Orders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
+  const [tabs, setTabs] = useState([
+    {
+      label: "All",
+      value: "all",
+      count: 0,
+    },
+    {
+      label: "Delivered",
+      value: "true",
+      count: 0,
+    },
+    {
+      label: "Unavailable",
+      value: "false",
+      count: 0,
+    },
+  ]);
 
   const openDrawer = () => setOpen(true);
   const closeDrawer = () => setOpen(false);
-  const isTesting = false;
 
   const fetchOrderData = async () => {
     const orderResult = await getAllOrders(currentPage, maxRow, activeTab, searchQuery);
@@ -92,15 +101,43 @@ export function Orders() {
     }
   };
 
-  useEffect(() => {
-    if (isTesting) {
-      setOrderData([]);
-      setLoading(false);
-    } else {
-      fetchOrderData();
-      fetchWaitersData();
-      fetchStatusesData();
+  const fetchOrdersCount = async () => {
+    const result = await getOrdersCounts();
+    if (result) {
+      setTabs([
+        {label: "All", value: "all", count: result.total},
+        {label: "Delivered", value: "true", count: result.available},
+        {label: "Undelivered", value: "false", count: result.unAvailable},
+      ]);
     }
+  };
+
+  useEffect(() => {
+    fetchOrdersCount();
+    fetchOrderData();
+    fetchWaitersData();
+    fetchStatusesData();
+    const restaurantId = localStorage.getItem("restaurants_id");
+    const orderSubscription = supabase
+      .channel("orders")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        async (payload) => {
+          fetchOrderData();
+          fetchOrdersCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(orderSubscription);
+    };
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
@@ -164,8 +201,26 @@ export function Orders() {
     toggleDrawer();
   };
 
+  const updateRemainingTime = (created_at, preparation_time) => {
+    const targetTime = new Date(created_at).getTime() + preparation_time * 60000;
+    const now = new Date().getTime();
+    const timeLeft = targetTime - now;
+
+    if (timeLeft <= 0) {
+      return "00:00";
+    } else {
+      const minutes = Math.floor(timeLeft / 60000);
+      const seconds = Math.floor((timeLeft % 60000) / 1000);
+      const timeResult = `${minutes < 10 ? "0" : ""}${minutes}:${
+        seconds < 10 ? "0" : ""
+      }${seconds}`;
+
+      return timeResult;
+    }
+  };
+
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12">
+    <div className="mt-8 mb-8 flex flex-col gap-12 min-h-screen">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-8 flex items-center justify-between gap-8">
@@ -181,16 +236,23 @@ export function Orders() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <Tabs value="all" className="w-full md:w-max">
               <TabsHeader>
-                {TABS.map(({label, value}) => (
-                  <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                {tabs.map(({label, value, count}) => (
+                  <Tab
+                    className="flex whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleTabChange(value)}>
+                    <div className="flex items-center gap-2">
+                      {label}
+                      <Chip variant="ghost" value={count} size="sm" />
+                    </div>
                   </Tab>
                 ))}
               </TabsHeader>
             </Tabs>
             <div className="w-full md:w-72">
               <Input
-                label="Search"
+                label="Search by order Id"
                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -201,6 +263,24 @@ export function Orders() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+            </div>
+          </div>
+          <div className="mt-5 flex gap-4">
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-blue-500 rounded-md" />
+              Order Sent
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-green-500 rounded-md" />
+              Order Confirmed
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-orange-500 rounded-md" />
+              Order Preparing
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-gray-700 rounded-md" />
+              Order Delivered
             </div>
           </div>
         </CardHeader>
@@ -231,7 +311,7 @@ export function Orders() {
                 </tr>
               </thead>
               <tbody
-                className={`${orderData.length === 0 && "h-[300px]"} relative w-full}`}>
+                className={`${orderData.length === 0 && "h-[350px]"} relative w-full}`}>
                 {orderData.length === 0 ? (
                   <div className="w-full absolute flex justify-center items-center h-full">
                     <Typography variant="h6" color="blue-gray" className="font-normal">
@@ -263,15 +343,71 @@ export function Orders() {
                       const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
                       return (
-                        <tr key={index}>
-                          <td className={classes}>
-                            <div className="flex items-center gap-3">
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="font-normal opacity-70">
-                                {order_id}
-                              </Typography>
+                        <tr key={index} className="h-28">
+                          <td
+                            className={`${classes} ${
+                              status_id?.sorting === 1
+                                ? "bg-blue-500"
+                                : status_id?.sorting === 2
+                                ? "bg-green-500"
+                                : status_id?.sorting === 3
+                                ? "bg-orange-500"
+                                : "bg-gray-500"
+                            } bg-opacity-25 relative`}>
+                            <div
+                              className={`w-2 h-full top-0 absolute left-0  ${
+                                status_id?.sorting === 1
+                                  ? "bg-blue-500"
+                                  : status_id?.sorting === 2
+                                  ? "bg-green-500"
+                                  : status_id?.sorting === 3
+                                  ? "bg-orange-500"
+                                  : "bg-gray-500"
+                              }`}
+                            />
+                            <div className="flex items-center gap-3 justify-end">
+                              <div className="flex items-center gap-3 relative w-fit">
+                                {!is_delivered && (
+                                  <div className="absolute -top-1 -right-1 z-20">
+                                    <span className="relative flex h-3 w-3">
+                                      <span
+                                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                                          status_id?.sorting === 1
+                                            ? "bg-blue-400"
+                                            : status_id?.sorting === 2
+                                            ? "bg-green-400"
+                                            : status_id?.sorting === 3
+                                            ? "bg-orange-400"
+                                            : "bg-gray-400"
+                                        }`}></span>
+                                      <span
+                                        className={`relative inline-flex rounded-full h-3 w-3 ${
+                                          status_id?.sorting === 1
+                                            ? "bg-blue-500"
+                                            : status_id?.sorting === 2
+                                            ? "bg-green-500"
+                                            : status_id?.sorting === 3
+                                            ? "bg-orange-500"
+                                            : "bg-gray-500"
+                                        }`}></span>
+                                    </span>
+                                  </div>
+                                )}
+                                <Chip
+                                  value={order_id}
+                                  size="lg"
+                                  variant="ghost"
+                                  color={
+                                    status_id?.sorting === 1
+                                      ? "blue"
+                                      : status_id?.sorting === 2
+                                      ? "green"
+                                      : status_id?.sorting === 3
+                                      ? "orange"
+                                      : "gray"
+                                  }
+                                />
+                              </div>
                             </div>
                           </td>
                           <td className={classes}>
@@ -280,62 +416,69 @@ export function Orders() {
                                 variant="small"
                                 color="blue-gray"
                                 className="font-normal">
-                                {new Date(created_at)
-                                  .toLocaleDateString("en-IN", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })
-                                  .replace(/-/g, " ")}
+                                {moment(created_at).format("DD MMM YYYY")}
+                              </Typography>
+                              <Typography
+                                variant="paragraph"
+                                color="blue-gray"
+                                className="font-normal">
+                                {moment(created_at).format("hh:mm a")}
                               </Typography>
                             </div>
                           </td>
                           <td className={classes}>
                             <div className="flex items-center gap-3">
-                              <Chip color="orange" value={table_id.table_no} />
+                              <Chip
+                                size="lg"
+                                variant="ghost"
+                                color="gray"
+                                value={table_id.table_no}
+                                className="font-bold text-sm"
+                              />
                             </div>
                           </td>
 
-                          <td className={`${classes} flex flex-col gap-1`}>
-                            {fooditem_ids.slice(0, 3).map((food, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <Typography
-                                  variant="small"
-                                  color="blue-gray"
-                                  className="font-normal opacity-70">
-                                  {food.food_name}
-                                </Typography>
-                                <Typography
-                                  variant="small"
-                                  color="blue-gray"
-                                  className="font-normal opacity-70">
-                                  ({food.quantity})
-                                </Typography>
-                              </div>
-                            ))}
-                            {fooditem_ids.length > 3 && (
-                              <h2
-                                onClick={() =>
-                                  handleSelectOrder({
-                                    id: id,
-                                    created_at: created_at,
-                                    order_id: order_id,
-                                    status_id: status_id,
-                                    is_delivered: is_delivered,
-                                    user_id: user_id,
-                                    fooditem_ids: fooditem_ids,
-                                    instructions: instructions,
-                                    preparation_time: preparation_time,
-                                    waiter_id: waiter_id,
-                                    tax_amount: tax_amount,
-                                    total_amount: total_amount,
-                                    grand_amount: grand_amount,
-                                  })
-                                }
-                                className="text-md underline underline-offset-2 text-orange-600 decoration-dotted cursor-pointer">
-                                see all
-                              </h2>
-                            )}
+                          <td className={classes}>
+                            <div className="flex flex-col gap-1">
+                              {fooditem_ids.slice(0, 2).map((food, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                  <StopIcon className="h-3 w-3 text-gray-500 mb-0.5" />
+                                  <Typography
+                                    variant="small"
+                                    color="blue-gray"
+                                    className="font-normal opacity-70">
+                                    {food.food_name}
+                                  </Typography>
+                                  <Typography
+                                    variant="small"
+                                    color="blue-gray"
+                                    className="font-normal opacity-70">
+                                    ({food.quantity})
+                                  </Typography>
+                                </div>
+                              ))}
+                            </div>
+                            <div
+                              onClick={() =>
+                                handleSelectOrder({
+                                  id: id,
+                                  created_at: created_at,
+                                  order_id: order_id,
+                                  status_id: status_id,
+                                  is_delivered: is_delivered,
+                                  user_id: user_id,
+                                  fooditem_ids: fooditem_ids,
+                                  instructions: instructions,
+                                  preparation_time: preparation_time,
+                                  waiter_id: waiter_id,
+                                  tax_amount: tax_amount,
+                                  total_amount: total_amount,
+                                  grand_amount: grand_amount,
+                                })
+                              }
+                              className="text-sm hover:animate-pulse hover:text-orange-400 transition-all duration-500 delay-75 w-fit underline mt-2 font-semibold underline-offset-2 text-orange-600 decoration-dotted cursor-pointer">
+                              View Details
+                            </div>
                           </td>
                           <td className={classes}>
                             <div className="flex items-center gap-3">
@@ -388,15 +531,18 @@ export function Orders() {
                                   variant="ghost"
                                   size="md"
                                   color="blue"
-                                  value={`${preparation_time} Minutes`}
+                                  value={`${updateRemainingTime(
+                                    created_at,
+                                    preparation_time,
+                                  )}`}
                                   className="flex justify-center cursor-pointer "
                                 />
                               </MenuHandler>
 
                               <MenuList>
-                                {[10, 20, 30, 40].map((time, index) => (
+                                {[10, 20, 30].map((time, index) => (
                                   <MenuItem
-                                    key={index}
+                                    key={`add-${index}`}
                                     onClick={() =>
                                       handlePreparationTimeChange(
                                         id,
@@ -405,6 +551,20 @@ export function Orders() {
                                       )
                                     }>
                                     Add {time} minutes
+                                  </MenuItem>
+                                ))}
+                                <hr className="my-1" />
+                                {[10, 20, 30].map((time, index) => (
+                                  <MenuItem
+                                    key={`minus-${index}`}
+                                    onClick={() =>
+                                      handlePreparationTimeChange(
+                                        id,
+                                        -time,
+                                        preparation_time,
+                                      )
+                                    }>
+                                    Reduce {time} minutes
                                   </MenuItem>
                                 ))}
                               </MenuList>
@@ -425,10 +585,10 @@ export function Orders() {
                                     status_id?.sorting === 1
                                       ? "blue"
                                       : status_id?.sorting === 2
-                                      ? "cyan"
+                                      ? "green"
                                       : status_id?.sorting === 3
                                       ? "orange"
-                                      : "green"
+                                      : "gray"
                                   }
                                   value={status_id?.title}
                                   className="flex justify-center cursor-pointer"
