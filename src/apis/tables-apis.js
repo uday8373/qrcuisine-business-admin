@@ -13,6 +13,7 @@ export async function getAllTables(page, pageSize, status, searchQuery) {
         count: "exact",
       })
       .eq("restaurant_id", restaurantId)
+      .order("is_booked", {ascending: false})
       .order("table_no", {ascending: true})
       .range((page - 1) * pageSize, page * pageSize - 1)
       .limit(pageSize);
@@ -21,7 +22,7 @@ export async function getAllTables(page, pageSize, status, searchQuery) {
       query = query.eq("is_booked", status === "true");
     }
     if (searchQuery) {
-      query = query.ilike("table_no", `%${searchQuery}%`);
+      query = query.eq("table_no", searchQuery);
     }
     const {data, count, error} = await query;
 
@@ -36,13 +37,59 @@ export async function getAllTables(page, pageSize, status, searchQuery) {
   }
 }
 
+export async function endSession(tableId) {
+  try {
+    const {data, error} = await supabase
+      .from("tables")
+      .update({is_booked: false, order_id: null, persons: null})
+      .eq("id", tableId)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+    if (data) {
+      return data;
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getTableCounts() {
+  try {
+    const {data, error} = await supabase
+      .from("tables")
+      .select("is_booked")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      throw error;
+    }
+
+    const totalTables = data.length;
+    const bookedTables = data.filter((table) => table.is_booked).length;
+    const availableTables = totalTables - bookedTables;
+
+    return {
+      totalTables,
+      bookedTables,
+      availableTables,
+    };
+  } catch (error) {
+    console.error("Error fetching table counts:", error);
+    throw error;
+  }
+}
+
 export async function insertTables(numberOfTables) {
   try {
     const highestTableNo = await getHighestTableNo();
     const newTables = [];
 
     for (let i = 1; i <= numberOfTables; i++) {
-      const tableNo = highestTableNo + i;
+      const table_No = highestTableNo + i;
+      const tableNo = parseInt(table_No, 10);
       const formattedTableNo = tableNo < 10 ? `0${tableNo}` : `${tableNo}`;
 
       newTables.push({
@@ -62,7 +109,7 @@ export async function insertTables(numberOfTables) {
       throw error;
     } else {
       for (const table of data) {
-        const formattedTableNo = table.table_no.toString().padStart(2, "0");
+        const formattedTableNo = table.table_no().padStart(2, "0");
         const qrCodeDataUrl = await generateQRCode(restaurant_name, table.id);
         const qrImageUrl = await generateQRTemplateImage(formattedTableNo, qrCodeDataUrl);
         const cloudinaryUrl = await uploadImageToCloudinary(qrImageUrl);
@@ -191,6 +238,7 @@ async function generateQRTemplateImage(table_no, qr_code) {
         font-size: 1.2rem;
         font-weight: 600;
         color: #FF9A04;
+        padding-top: 0.5em;
        font-family: Montserrat;
        text-transform: uppercase;
       ">
@@ -211,14 +259,14 @@ async function generateQRTemplateImage(table_no, qr_code) {
       gap: 15px;
       position: relative;
     ">
-      <img src="/logo.svg" style="width: 100px; margin-top: 5px;" />
+      <img src="/logo.svg" style="width: 60px;" />
       <h3 style="
         font-size: 0.6rem;
         font-weight: 500;
         color: #fffa;
        font-family: Montserrat;
       ">
-       www.tableqr.com
+       www.qrcuisine.com
       </h3>
       </div>
     </div>
@@ -278,7 +326,6 @@ export async function getHighestTableNo() {
     if (error) {
       return 0;
     } else {
-      console.log("object", data);
       return data?.table_no || 0;
     }
   } catch (error) {

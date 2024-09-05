@@ -9,31 +9,31 @@ export default function VisitorChart({chartData}) {
     height: 320,
     series: [
       {
-        name: "Website Visits",
+        name: "Menu Page",
         data: chartData.website_visit,
       },
       {
-        name: "Table Booked",
+        name: "Booking Page",
         data: chartData.booked_count,
       },
       {
-        name: "Order Checkout",
+        name: "Checkout Page",
         data: chartData.checkout_count,
       },
       {
-        name: "Order Placed",
+        name: "Order Placed Page",
         data: chartData.place_order_count,
       },
       {
-        name: "Order Confirmed",
+        name: "Order Confirmed Page",
         data: chartData.order_confirm_count,
       },
       {
-        name: "Order Preparing",
+        name: "Order Preparing Page",
         data: chartData.order_preparing_count,
       },
       {
-        name: "Order Delivered",
+        name: "Order Delivered Page",
         data: chartData.order_delivered_count,
       },
     ],

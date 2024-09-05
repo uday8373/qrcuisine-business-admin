@@ -61,6 +61,7 @@ export function Category() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const isTesting = false;
 
   const fetchCategoryData = async () => {
     const categoryResult = await getAllCategories(
@@ -79,8 +80,13 @@ export function Category() {
   };
 
   useEffect(() => {
-    fetchCategoryData();
-  }, [maxRow, currentPage, loading, activeTab, searchQuery]);
+    if (isTesting) {
+      setCategoryData([]);
+      setLoading(false);
+    } else {
+      fetchCategoryData();
+    }
+  }, [isTesting, maxRow, currentPage, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
 
@@ -191,7 +197,7 @@ export function Category() {
   };
 
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12">
+    <div className="mt-8 mb-8 flex flex-col gap-12 min-h-[100vh]">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-5 flex items-center justify-between gap-8">

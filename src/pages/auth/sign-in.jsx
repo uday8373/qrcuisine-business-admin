@@ -47,7 +47,7 @@ export function SignIn() {
   const fetchRestaurantData = async (adminId) => {
     const {data, error} = await supabase
       .from("restaurants")
-      .select("id, upload_preset, cloud_name, restaurant_name")
+      .select("id, upload_preset, cloud_name, unique_name")
       .eq("admin_id", adminId)
       .single();
 
@@ -57,7 +57,7 @@ export function SignIn() {
       localStorage.setItem("restaurants_id", data.id);
       localStorage.setItem("cloudName", data.cloud_name);
       localStorage.setItem("uploadPreset", data.upload_preset);
-      localStorage.setItem("restaurantName", data.restaurant_name);
+      localStorage.setItem("restaurantName", data.unique_name);
       navigate("/dashboard/home");
     }
   };

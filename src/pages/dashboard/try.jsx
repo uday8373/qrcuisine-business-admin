@@ -1,67 +1,52 @@
-import {useEffect, useState} from "react";
+const isWeekly = activeChartTab === "week";
+const timeFormat = isWeekly ? "ddd" : "MMM";
 
-import {
-  getOrdersApi,
-  getRevenueChartApi,
-  getUserChartApi,
-  getUsersApi,
-  getVisitorApi,
-} from "@/apis/analytic-apis";
-import moment from "moment";
+const dataKeys = isWeekly
+  ? Array.from({length: 7}, (_, i) =>
+      moment().subtract(i, "days").format(timeFormat),
+    ).reverse()
+  : Array.from({length: 12}, (_, i) =>
+      moment().subtract(i, "months").format(timeFormat),
+    ).reverse();
 
-const chartTabs = [
-  {label: "Last 7 Days", value: "week"},
-  {label: "Last 12 Months", value: "year"},
-];
+const initializeDataMap = (keys, defaultValue) =>
+  keys.reduce((acc, key) => {
+    acc[key] = {...defaultValue};
+    return acc;
+  }, {});
 
-export function Home() {
-  const [activeChartTab, setActiveChartTab] = useState("week");
-  const [revenueChartData, setRevenueChartData] = useState({
-    labels: [],
-    totalRevenue: [],
-  });
-  const [trendingFoods, setTrendingFoods] = useState({
-    food_name: "",
-    food_image: "",
-    food_sold_count: 0,
-  });
+const userChartDataMap = initializeDataMap(dataKeys, {
+  totalUsers: 0,
+  newUsers: 0,
+  returningUsers: 0,
+});
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [revenueChartResponse] = await Promise.all([
-          getRevenueChartApi(activeChartTab),
-        ]);
-        if (!revenueChartResponse) {
-          throw new Error("Failed to fetch data");
-        }
+userChartResponse.forEach((item) => {
+  const dateKey = moment(item.created_at).format(timeFormat);
+  if (userChartDataMap[dateKey]) {
+    userChartDataMap[dateKey].totalUsers++;
+    item.isNewUser
+      ? userChartDataMap[dateKey].newUsers++
+      : userChartDataMap[dateKey].returningUsers++;
+  }
+});
 
-        // Revenue Chart Statistics
-        const revenueChartDataMap = initializeDataMap(dataKeys, {
-          totalRevenue: 0,
-        });
+// Prepare user chart data
+const userChartData = dataKeys.map((key) => ({
+  label: key,
+  totalUsers: userChartDataMap[key].totalUsers,
+  newUsers: userChartDataMap[key].newUsers,
+  returningUsers: userChartDataMap[key].returningUsers,
+}));
 
-        revenueChartResponse.forEach((item) => {
-          const dateKey = moment(item.created_at).format(timeFormat);
-          if (revenueChartDataMap[dateKey]) {
-            revenueChartDataMap[dateKey].totalRevenue += item.grand_amount;
-          }
-        });
+setUserChartData({
+  labels: dataKeys,
+  totalUsersCount: userChartData.map((data) => data.totalUsers),
+  newUsersCount: userChartData.map((data) => data.newUsers),
+  returningUsersCount: userChartData.map((data) => data.returningUsers),
+});
 
-        // Prepare revenue chart data
-        const revenueChartData = dataKeys.map((key) => ({
-          label: key,
-          totalRevenue: revenueChartDataMap[key].totalRevenue,
-        }));
-
-        setRevenueChartData({
-          labels: dataKeys,
-          totalRevenue: revenueChartData.map((data) => data.totalRevenue),
-        });
-      } catch (error) {
-        throw error;
-      }
-    };
-    fetchData();
-  }, [activeChartTab]);
-}
+// For calculate totalUsersCount, newUsersCount and returningUsersCount use deviceToken,
+// every unique deviceToken means a user for calculate totalUser
+// if same deviceToken exist 2 or more time that mean returningUser
+// If deviceToken exist only one time that mean newUser

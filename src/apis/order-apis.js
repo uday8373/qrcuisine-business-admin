@@ -7,12 +7,15 @@ export async function getAllOrders(page, pageSize, status, searchQuery) {
       .from("orders")
       .select(`*,table_id(*),waiter_id(*),status_id(*),user_id(*)`, {count: "exact"})
       .eq("restaurant_id", restaurantId)
+      .order("is_delivered", {ascending: true})
       .order("created_at", {ascending: false})
       .range((page - 1) * pageSize, page * pageSize - 1)
       .limit(pageSize);
+
     if (status !== "all") {
       query = query.eq("is_delivered", status === "true");
     }
+
     if (searchQuery) {
       query = query.ilike("order_id", `%${searchQuery}%`);
     }
@@ -29,6 +32,32 @@ export async function getAllOrders(page, pageSize, status, searchQuery) {
   }
 }
 
+export async function getOrdersCounts() {
+  try {
+    const {data, error} = await supabase
+      .from("orders")
+      .select("is_delivered")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      throw error;
+    }
+
+    const total = data.length;
+    const available = data.filter((item) => item.is_delivered).length;
+    const unAvailable = total - available;
+
+    return {
+      total,
+      available,
+      unAvailable,
+    };
+  } catch (error) {
+    console.error("Error fetching table counts:", error);
+    throw error;
+  }
+}
+
 export async function updateOrder(value) {
   try {
     const updates = {
@@ -37,8 +66,9 @@ export async function updateOrder(value) {
       waiter_id: value.waiter_id,
     };
 
-    if (value.sorting === 4) {
+    if (value.sorting === 3) {
       updates.is_delivered = true;
+      updates.delivered_time = new Date().toISOString();
     }
 
     const {data, error} = await supabase
