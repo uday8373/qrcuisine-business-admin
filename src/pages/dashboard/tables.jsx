@@ -19,38 +19,25 @@ import {
   ChevronUpDownIcon,
   CloudArrowDownIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
   PlusCircleIcon,
+  TrashIcon,
 } from "@heroicons/react/24/solid";
 import React, {useEffect, useState} from "react";
-import {getAllTables, insertTables} from "@/apis/tables-apis";
+import {endSession, getAllTables, getTableCounts, insertTables} from "@/apis/tables-apis";
 import {AddTableModal} from "@/components/table-modal/add-table";
 import jsPDF from "jspdf";
+import supabase from "@/configs/supabase";
+import {EndSession} from "@/components/table-modal/end-session";
 
 const TABLE_HEAD = [
   "Table No",
   "Status",
+  "Order ID",
   "Order Status",
   "Number Of Customer",
   "Customer Info",
-  "Availability",
   "QR Code",
   "action",
-];
-
-const TABS = [
-  {
-    label: "All",
-    value: "all",
-  },
-  {
-    label: "Booked",
-    value: "true",
-  },
-  {
-    label: "Available",
-    value: "false",
-  },
 ];
 
 export function Tables() {
@@ -69,8 +56,26 @@ export function Tables() {
   const [errors, setErrors] = useState({});
   const [openAddModal, setOpenAddModal] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
-
-  const isTesting = false;
+  const [tabs, setTabs] = useState([
+    {
+      label: "All",
+      value: "all",
+      count: 0,
+    },
+    {
+      label: "Booked",
+      value: "true",
+      count: 0,
+    },
+    {
+      label: "Available",
+      value: "false",
+      count: 0,
+    },
+  ]);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState("");
+  const [sessionLoading, setSessionLoading] = useState(false);
 
   const resetFormData = () => {
     setFormData({numberOfTable: "", table_no: ""});
@@ -85,13 +90,41 @@ export function Tables() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (isTesting) {
-      setTableData([]);
-      setLoading(false);
-    } else {
-      fetchTablesData();
+  const fetchTableCount = async () => {
+    const result = await getTableCounts();
+    if (result) {
+      setTabs([
+        {label: "All", value: "all", count: result.totalTables},
+        {label: "Booked", value: "true", count: result.bookedTables},
+        {label: "Available", value: "false", count: result.availableTables},
+      ]);
     }
+  };
+
+  useEffect(() => {
+    fetchTablesData();
+    fetchTableCount();
+    const restaurantId = localStorage.getItem("restaurants_id");
+    const tableSubscription = supabase
+      .channel("tables")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tables",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        async (payload) => {
+          fetchTablesData();
+          fetchTableCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tableSubscription);
+    };
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
@@ -124,7 +157,6 @@ export function Tables() {
       resetFormData();
       setFormLoading(false);
       toogleAddModal();
-      fetchTablesData();
     }
   };
 
@@ -144,7 +176,7 @@ export function Tables() {
     return Object.keys(newErrors).length === 0;
   };
 
-  function handleDownload(qrImageUrl, tableNo) {
+  const handleDownload = (qrImageUrl, tableNo) => {
     fetch(qrImageUrl)
       .then((response) => response.blob())
       .then((blob) => {
@@ -158,7 +190,7 @@ export function Tables() {
         window.URL.revokeObjectURL(url);
       })
       .catch((error) => console.error("Error downloading the image:", error));
-  }
+  };
 
   const handleDownloadAll = async () => {
     setDownloadLoading(true);
@@ -225,8 +257,29 @@ export function Tables() {
     doc.save("table-qrcodes.pdf");
   };
 
+  const toggleDeleteModal = () => {
+    setOpenDeleteModal(!openDeleteModal);
+  };
+
+  const handleDelete = (value) => {
+    setSelectedId(value);
+    toggleDeleteModal();
+  };
+
+  const handleCloseSession = async () => {
+    setSessionLoading(true);
+    try {
+      await endSession(selectedId);
+    } catch (error) {
+      throw error;
+    } finally {
+      setSessionLoading(false);
+      toggleDeleteModal();
+    }
+  };
+
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12">
+    <div className="mt-8 mb-8 flex flex-col gap-12 min-h-[100vh]">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none pb-8">
           <div className="mb-5 flex items-center justify-between gap-8">
@@ -258,9 +311,16 @@ export function Tables() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <Tabs value={activeTab} className="w-full md:w-max">
               <TabsHeader>
-                {TABS.map(({label, value}) => (
-                  <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                {tabs.map(({label, value, count}) => (
+                  <Tab
+                    className="flex whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleTabChange(value)}>
+                    <div className="flex items-center gap-2">
+                      {label}
+                      <Chip variant="ghost" value={count} size="sm" />
+                    </div>
                   </Tab>
                 ))}
               </TabsHeader>
@@ -280,10 +340,20 @@ export function Tables() {
               />
             </div>
           </div>
+          <div className="mt-5 flex gap-4">
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-green-500 rounded-md" />
+              Table Booked
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-gray-700 rounded-md" />
+              Table Available
+            </div>
+          </div>
         </CardHeader>
         <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
           {loading ? (
-            <div className="flex w-full h-[200px] justify-center items-center">
+            <div className="flex w-full h-[350px] justify-center items-center">
               <Spinner className="h-8 w-8" />
             </div>
           ) : (
@@ -308,39 +378,69 @@ export function Tables() {
                 </tr>
               </thead>
               <tbody
-                className={`${tableData.length === 0 && "h-[300px]"} relative w-full}`}>
+                className={`${tableData.length === 0 && "h-[350px]"} relative w-full`}>
                 {tableData.length === 0 ? (
-                  <div className="w-full absolute flex justify-center items-center h-full">
-                    <Typography variant="h6" color="blue-gray" className="font-normal">
-                      No Table Found
-                    </Typography>
-                  </div>
+                  <tr>
+                    <td colSpan={TABLE_HEAD.length} className="text-center py-5">
+                      <Typography variant="h6" color="blue-gray" className="font-normal">
+                        No Table Found
+                      </Typography>
+                    </td>
+                  </tr>
                 ) : (
                   tableData.map((table, index) => {
-                    const className = `py-3 px-5 ${
+                    const className = `py-3 px-5 relative ${
                       index === tableData.length - 1 ? "" : "border-b border-blue-gray-50"
                     }`;
 
                     return (
                       <tr key={index}>
-                        <td className={className}>
-                          <div className="flex items-center gap-3">
-                            <Chip
-                              variant="ghost"
-                              color="gray"
-                              size="lg"
-                              value={table?.table_no}
-                              className="text-sm font-bold"
-                            />
+                        <td
+                          className={`${className} ${
+                            table?.is_booked ? "bg-green-500" : "bg-gray-700"
+                          } bg-opacity-25`}>
+                          <div
+                            className={`w-2 h-full top-0 absolute left-0  ${
+                              table?.is_booked ? "bg-green-500" : "bg-gray-700"
+                            }`}
+                          />
+                          <div className="flex w-full justify-center">
+                            <div className="flex items-center gap-3 relative w-fit ">
+                              {table.is_booked && (
+                                <div className="absolute -top-1 -right-1 z-20">
+                                  <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                  </span>
+                                </div>
+                              )}
+                              <Chip
+                                variant="ghost"
+                                color={table.is_booked ? "green" : "gray"}
+                                size="lg"
+                                value={table?.table_no}
+                                className="text-sm font-bold z-30"
+                              />
+                            </div>
                           </div>
                         </td>
                         <td className={className}>
                           <Chip
                             variant="ghost"
-                            color={table?.is_booked ? "orange" : "green"}
+                            color={table?.is_booked ? "green" : "gray"}
                             value={table?.is_booked ? "Booked" : "Available"}
                             className="justify-center items-center w-24"
                           />
+                        </td>
+                        <td className={className}>
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal">
+                            {table?.order_id?.order_id
+                              ? table?.order_id?.order_id
+                              : "N/A"}
+                          </Typography>
                         </td>
                         <td className={className}>
                           <Chip
@@ -350,7 +450,7 @@ export function Tables() {
                               table?.order_id?.status_id?.sorting === 1
                                 ? "blue"
                                 : table?.order_id?.status_id?.sorting === 2
-                                ? "cyan"
+                                ? "green"
                                 : table?.order_id?.status_id?.sorting === 3
                                 ? "orange"
                                 : table?.order_id?.status_id?.sorting === 4
@@ -399,41 +499,36 @@ export function Tables() {
                           )}
                         </td>
                         <td className={className}>
-                          <Chip
-                            variant="ghost"
-                            color={table?.is_available ? "green" : "red"}
-                            value={table?.is_available ? "Available" : "Unavailable"}
-                            className="justify-center items-center w-24"
+                          <Avatar
+                            src={`${table?.qr_image?.replace(
+                              "/upload/",
+                              "/upload/c_scale,w_100/",
+                            )}`}
+                            variant="rounded"
                           />
                         </td>
-                        <td className={className}>
-                          {table?.qr_image !== "Null" ? (
-                            <Avatar src={table?.qr_image} variant="rounded" />
-                          ) : (
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal">
-                              N/A
-                            </Typography>
-                          )}
-                        </td>
-                        <td className={`${className} w-28 flex`}>
-                          <Tooltip content="Edit Table">
-                            <IconButton variant="text">
-                              <PencilIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
+                        <td className={`${className} w-28`}>
+                          <div className="flex">
+                            <Tooltip content="End Session">
+                              <IconButton
+                                onClick={() => {
+                                  handleDelete(table?.id);
+                                }}
+                                variant="text">
+                                <TrashIcon className="h-5 w-5" />
+                              </IconButton>
+                            </Tooltip>
 
-                          <Tooltip content="Download Qr Code">
-                            <IconButton
-                              onClick={() =>
-                                handleDownload(table?.qr_image, table?.table_no)
-                              }
-                              variant="text">
-                              <CloudArrowDownIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
+                            <Tooltip content="Download Qr Code">
+                              <IconButton
+                                onClick={() =>
+                                  handleDownload(table?.qr_image, table?.table_no)
+                                }
+                                variant="text">
+                                <CloudArrowDownIcon className="h-5 w-5" />
+                              </IconButton>
+                            </Tooltip>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -516,6 +611,14 @@ export function Tables() {
         handleSubmit={handleSubmit}
         loading={formLoading}
         errors={errors}
+      />
+
+      <EndSession
+        open={openDeleteModal}
+        setOpen={setOpenDeleteModal}
+        handleOpen={toggleDeleteModal}
+        handleSubmit={handleCloseSession}
+        loading={sessionLoading}
       />
     </div>
   );

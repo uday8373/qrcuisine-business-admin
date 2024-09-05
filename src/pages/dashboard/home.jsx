@@ -123,54 +123,50 @@ export function Home() {
           throw new Error("Failed to fetch data");
         }
 
-        // Total Revenue Statistics
-        const totalAmount = orderResponse.currentData.reduce((accumulator, order) => {
-          return accumulator + order.grand_amount;
-        }, 0);
+        // Total Revenue Statistics ✅
+        const totalAmount = orderResponse.currentData
+          .filter((order) => order.is_delivered)
+          .reduce((accumulator, order) => {
+            return accumulator + order.grand_amount;
+          }, 0);
         setOrderTotalAmount(totalAmount);
 
-        const previousTotalAmount = orderResponse.previousData.reduce(
-          (accumulator, order) => {
+        const previousTotalAmount = orderResponse.previousData
+          .filter((order) => order.is_delivered)
+          .reduce((accumulator, order) => {
             return accumulator + order.grand_amount;
-          },
-          0,
-        );
+          }, 0);
         const orderTotalAmountChange = calculatePercentageChange(
           totalAmount,
           previousTotalAmount,
         );
         setOrderTotalAmountChange(orderTotalAmountChange);
 
-        // Peak Ordering Hour Statistics
+        // Peak Ordering Hour Statistics ✅
         const orderHoursMap = {};
 
         orderResponse.currentData.forEach((order) => {
-          const hour = moment(order.created_at).hour(); // Get the hour of the order
+          const hour = moment(order.created_at).hour();
           orderHoursMap[hour] = (orderHoursMap[hour] || 0) + 1;
         });
 
-        // Find the peak ordering hour
         const peakHour = Object.keys(orderHoursMap).reduce(
           (a, b) => (orderHoursMap[a] > orderHoursMap[b] ? a : b),
           0,
         );
 
-        // Find the last peak ordering hour
         const lastPeakHour = Object.keys(orderHoursMap).reduce(
           (a, b) => (orderHoursMap[a] < orderHoursMap[b] ? a : b),
           0,
         );
 
-        // Convert hours to 12-hour format with AM/PM
         const peakHourFormatted = moment(peakHour, "HH").format("h A");
         const lastPeakHourFormatted = moment(lastPeakHour, "HH").format("h A");
 
-        // Determine the range of peak ordering hours
         const peakHourEnd = (parseInt(peakHour) + 1) % 24;
         const peakHourEndFormatted = moment(peakHourEnd, "HH").format("h A");
         const peakOrderingHourRange = `${peakHourFormatted} to ${peakHourEndFormatted}`;
 
-        // Determine the range of the last peak ordering hours
         const lastPeakHourEnd = (parseInt(lastPeakHour) + 1) % 24;
         const lastPeakHourEndFormatted = moment(lastPeakHourEnd, "HH").format("h A");
         const lastPeakOrderingHourRange = `${lastPeakHourFormatted} to ${lastPeakHourEndFormatted}`;
@@ -178,22 +174,21 @@ export function Home() {
         setPeakOrderingHour(peakOrderingHourRange);
         setLastPeakOrderingHour(lastPeakOrderingHourRange);
 
-        // Total Customers Statistics
+        // Total Customers Statistics ✅
         const uniqueCustomers = new Set(
           userResponse.currentData.map((user) => user.deviceToken),
         );
         const previousUniqueCustomers = new Set(
           userResponse.previousData.map((user) => user.deviceToken),
         );
-        setTotalCustomers(uniqueCustomers.size);
-
         const totalCustomersChange = calculatePercentageChange(
           uniqueCustomers.size,
           previousUniqueCustomers.size,
         );
+        setTotalCustomers(uniqueCustomers.size);
         setTotalCustomersChange(totalCustomersChange);
 
-        // New Customers and Returning Statistics
+        // New Customers and Returning Statistics ✅
         const {newUsers, returningUsers} = calculateNewAndReturningUsers(
           userResponse.currentData,
         );
@@ -229,14 +224,13 @@ export function Home() {
 
         setActiveUsersChange(activeUsersChange);
 
-        // Visitor Chart Statistics
+        // Visitor Chart Statistics ✅
         const initializeDataMap = (keys, defaultValue) =>
           keys.reduce((acc, key) => {
             acc[key] = {...defaultValue};
             return acc;
           }, {});
 
-        // Helper function to process visitor data
         const processVisitorData = (dataMap, item) => {
           const {
             website_visit,
@@ -257,9 +251,9 @@ export function Home() {
           dataMap.orderDeliveredCounts += order_delivered_count;
         };
 
-        // Process visitor data based on active chart tab
         const isWeekly = activeChartTab === "week";
         const timeFormat = isWeekly ? "ddd" : "MMM";
+
         const dataKeys = isWeekly
           ? Array.from({length: 7}, (_, i) =>
               moment().subtract(i, "days").format(timeFormat),
@@ -285,7 +279,6 @@ export function Home() {
           }
         });
 
-        // Prepare Visitor chart data
         const chartData = dataKeys.map((key) => ({
           label: key,
           websiteVisits: visitorDataMap[key].websiteVisits,
@@ -308,21 +301,40 @@ export function Home() {
           labels: dataKeys,
         });
 
-        // User Chart Statistics
+        // User Chart Statistics ✅
         const userChartDataMap = initializeDataMap(dataKeys, {
           totalUsers: 0,
           newUsers: 0,
           returningUsers: 0,
         });
 
+        const deviceTokenCountMap = new Map();
+
         userChartResponse.forEach((item) => {
           const dateKey = moment(item.created_at).format(timeFormat);
           if (userChartDataMap[dateKey]) {
-            userChartDataMap[dateKey].totalUsers++;
-            item.isNewUser
-              ? userChartDataMap[dateKey].newUsers++
-              : userChartDataMap[dateKey].returningUsers++;
+            const token = item.deviceToken;
+            if (!deviceTokenCountMap.has(token)) {
+              deviceTokenCountMap.set(token, 0);
+            }
+            deviceTokenCountMap.set(token, deviceTokenCountMap.get(token) + 1);
           }
+        });
+
+        deviceTokenCountMap.forEach((count, token) => {
+          userChartResponse.forEach((item) => {
+            if (item.deviceToken === token) {
+              const dateKey = moment(item.created_at).format(timeFormat);
+              if (userChartDataMap[dateKey]) {
+                userChartDataMap[dateKey].totalUsers++;
+                if (count === 1) {
+                  userChartDataMap[dateKey].newUsers++;
+                } else {
+                  userChartDataMap[dateKey].returningUsers++;
+                }
+              }
+            }
+          });
         });
 
         // Prepare user chart data
@@ -333,6 +345,7 @@ export function Home() {
           returningUsers: userChartDataMap[key].returningUsers,
         }));
 
+        // Set the chart data state
         setUserChartData({
           labels: dataKeys,
           totalUsersCount: userChartData.map((data) => data.totalUsers),
@@ -340,22 +353,23 @@ export function Home() {
           returningUsersCount: userChartData.map((data) => data.returningUsers),
         });
 
-        // Revenue Chart Statistics
+        // Revenue Chart Statistics ✅
         const revenueChartDataMap = initializeDataMap(dataKeys, {
           totalRevenue: 0,
         });
 
         revenueChartResponse.forEach((item) => {
-          const dateKey = moment(item.created_at).format(timeFormat);
-          if (revenueChartDataMap[dateKey]) {
-            revenueChartDataMap[dateKey].totalRevenue += item.grand_amount;
+          if (item.is_delivered) {
+            const dateKey = moment(item.created_at).format(timeFormat);
+            if (revenueChartDataMap[dateKey]) {
+              revenueChartDataMap[dateKey].totalRevenue += item.grand_amount;
+            }
           }
         });
 
-        // Prepare revenue chart data
         const revenueChartData = dataKeys.map((key) => ({
           label: key,
-          totalRevenue: revenueChartDataMap[key].totalRevenue,
+          totalRevenue: revenueChartDataMap[key].totalRevenue.toFixed(2),
         }));
 
         setRevenueChartData({
@@ -363,7 +377,7 @@ export function Home() {
           totalRevenue: revenueChartData.map((data) => data.totalRevenue),
         });
 
-        // Calculate trending foods
+        // Calculate trending foods ✅
         const foodCountMap = {};
         revenueChartResponse.forEach((order) => {
           const foodItems = order.fooditem_ids;
@@ -409,6 +423,21 @@ export function Home() {
         return "Monthly";
       case "year":
         return "Yearly";
+      default:
+        return "Today's";
+    }
+  };
+
+  const getFooterPrefixByTab = (tab) => {
+    switch (tab) {
+      case "today":
+        return "yesterday";
+      case "week":
+        return "last week";
+      case "month":
+        return "last month";
+      case "year":
+        return "last year";
       default:
         return "Today's";
     }
@@ -490,7 +519,7 @@ export function Home() {
                 {orderTotalAmountChange >= 0 ? "+" : ""}
                 {orderTotalAmountChange.toFixed(2)}%
               </strong>
-              &nbsp;than last period
+              &nbsp;than {getFooterPrefixByTab(selectedTab)}
             </Typography>
           }
         />
@@ -508,7 +537,7 @@ export function Home() {
                 {totalCustomersChange >= 0 ? "+" : ""}
                 {totalCustomersChange.toFixed(2)}%
               </strong>
-              &nbsp;than last period
+              &nbsp;than {getFooterPrefixByTab(selectedTab)}
             </Typography>
           }
         />
@@ -525,7 +554,7 @@ export function Home() {
                 {newUsersChange >= 0 ? "+" : ""}
                 {newUsersChange.toFixed(2)}%
               </strong>
-              &nbsp;than last period
+              &nbsp;than {getFooterPrefixByTab(selectedTab)}
             </Typography>
           }
         />
@@ -543,7 +572,7 @@ export function Home() {
                 {returningUsersChange >= 0 ? "+" : ""}
                 {returningUsersChange.toFixed(2)}%
               </strong>
-              &nbsp;than last period
+              &nbsp;than {getFooterPrefixByTab(selectedTab)}
             </Typography>
           }
         />
@@ -561,7 +590,7 @@ export function Home() {
                 {activeUsersChange >= 0 ? "+" : ""}
                 {activeUsersChange.toFixed(2)}%
               </strong>
-              &nbsp;than last period
+              &nbsp;than {getFooterPrefixByTab(selectedTab)}
             </Typography>
           }
         />
@@ -575,7 +604,7 @@ export function Home() {
           })}
           footer={
             <Typography className="font-normal text-blue-gray-600">
-              last peak hour &nbsp;
+              {getFooterPrefixByTab(selectedTab)} peak &nbsp;
               <strong className="text-green-500">{lastLeakOrderingHour}</strong>
             </Typography>
           }

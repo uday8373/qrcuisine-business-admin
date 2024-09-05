@@ -83,19 +83,6 @@ export default function UserChart({chartData}) {
           right: 20,
         },
       },
-      // fill: {
-      //   type: "gradient",
-      //   gradient: {
-      //     shade: "light",
-      //     type: "vertical",
-      //     shadeIntensity: 1,
-      //     gradientToColors: ["#fff"],
-      //     inverseColors: false,
-      //     opacityFrom: 0.5,
-      //     opacityTo: 0,
-      //     stops: [0, 100],
-      //   },
-      // },
       tooltip: {
         theme: "light",
       },
@@ -114,7 +101,7 @@ export default function UserChart({chartData}) {
         </div>
         <div>
           <Typography variant="h6" color="blue-gray">
-            Customers Analytics
+            Customers Statistics
           </Typography>
           <Typography variant="small" color="gray" className="max-w-sm font-normal">
             Total Customers on the website
