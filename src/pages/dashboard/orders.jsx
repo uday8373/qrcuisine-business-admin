@@ -117,7 +117,7 @@ export function Orders() {
     fetchOrderData();
     fetchWaitersData();
     fetchStatusesData();
-    const restaurantId = localStorage.getItem("restaurants_id");
+    const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
     const orderSubscription = supabase
       .channel("orders")
       .on(

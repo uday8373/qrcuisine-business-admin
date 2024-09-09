@@ -1,12 +1,14 @@
 import {Routes, Route, useNavigate} from "react-router-dom";
 import routes from "@/routes";
 import {useEffect, useState} from "react";
+import {ToastContainer} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export function Auth() {
   const navigation = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const isLooged = localStorage.getItem("accessToken");
+    const isLooged = JSON.parse(localStorage.getItem("accessToken"));
     if (isLooged) {
       navigation("/dashboard/home");
     }
@@ -15,6 +17,7 @@ export function Auth() {
 
   return (
     <div className="relative min-h-screen w-full">
+      <ToastContainer draggable stacked autoClose={false} style={{width: "500px"}} />
       {isLoading ? (
         <div className="flex justify-center w-full items-center h-screen">
           <div className="spinner-border text-primary" role="status">
