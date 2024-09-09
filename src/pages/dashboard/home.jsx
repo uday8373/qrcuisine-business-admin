@@ -4,25 +4,14 @@ import {
   Card,
   CardHeader,
   CardBody,
-  IconButton,
-  Menu,
-  MenuHandler,
-  MenuList,
-  MenuItem,
   Avatar,
-  Tooltip,
-  Progress,
   Tabs,
   Tab,
   TabsHeader,
 } from "@material-tailwind/react";
-import {EllipsisVerticalIcon, ArrowUpIcon} from "@heroicons/react/24/outline";
 import {StatisticsCard} from "@/widgets/cards";
-import {projectsTableData, ordersOverviewData} from "@/data";
 import {
   BanknotesIcon,
-  ChartBarSquareIcon,
-  CheckCircleIcon,
   ClockIcon,
   ShoppingBagIcon,
   UserCircleIcon,

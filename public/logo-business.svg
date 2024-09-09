@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 942 283" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-2910.71,-880.595)">
+        <g transform="matrix(0.75,0,0,0.848101,1444.5,888.924)">
+            <g id="shape" transform="matrix(1.86509,0,0,0.593131,-347.194,2152.27)">
+                <g>
+                    <g transform="matrix(0.144563,0,0,0.401993,361.126,-4766.52)">
+                        <path d="M7087.62,3963.35L7087.62,4188.65L6337.55,4188.65C6173.41,4188.65 6040.35,4055.59 6040.35,3891.45L6040.35,3086.55C6040.35,2922.41 6173.41,2789.35 6337.55,2789.35L7142.45,2789.35C7306.59,2789.35 7439.65,2922.41 7439.65,3086.55L7439.65,3836.62L7214.35,3836.62L7214.35,3086.55C7214.35,3046.84 7182.16,3014.65 7142.45,3014.65L6337.55,3014.65C6297.84,3014.65 6265.65,3046.84 6265.65,3086.55L6265.65,3891.45C6265.65,3931.16 6297.84,3963.35 6337.55,3963.35L7087.62,3963.35Z" style="fill:rgb(106,176,74);"/>
+                    </g>
+                    <g transform="matrix(0.0578684,0,0,0.160918,954.701,-3925.41)">
+                        <path d="M6434.41,3183.41L6434.41,3794.59L7276.01,3794.59L7276.01,4357.41L6296.34,4357.41L6213.09,4349.17L6133.8,4325.08L6060.69,4286.05L5996,4233L5942.95,4168.31L5903.92,4095.2L5879.83,4015.91L5871.59,3932.66L5871.59,3045.34L5879.83,2962.09L5903.92,2882.8L5942.95,2809.69L5996,2745L6060.69,2691.95L6133.8,2652.92L6213.09,2628.83L6296.34,2620.59L7288.5,2620.59L7288.5,3183.41L7007.09,3183.41C7007.09,3183.41 6640.72,3183.41 6434.41,3183.41Z" style="fill:rgb(255,168,8);"/>
+                    </g>
+                    <g transform="matrix(0.371885,0,0,1.02276,-1280.74,-7258.63)">
+                        <rect x="7216" y="3992" width="91" height="91" style="fill:rgb(255,168,8);"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(0.75,0,0,0.848101,1444.5,888.924)">
+            <g transform="matrix(1.26399,0,0,1.11778,-8045.04,-4965.66)">
+                <g transform="matrix(0.989821,0,0,1,84.2335,0)">
+                    <g transform="matrix(121.94,0,0,121.94,8915.46,4557)">
+                    </g>
+                    <text x="8275px" y="4557px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:121.94px;fill:rgb(106,176,74);">B<tspan x="8365.5px 8456px 8539.77px 8576.09px 8666.59px 8750.36px 8834.13px " y="4557px 4557px 4557px 4557px 4557px 4557px 4557px ">USINESS</tspan></text>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(0.75,0,0,0.848101,1444.5,888.924)">
+            <g transform="matrix(0.317068,0,0,0.285151,-199.577,-1014.46)">
+                <g transform="matrix(0.989821,0,0,1,84.2335,0)">
+                    <g transform="matrix(484.781,0,0,484.781,9712.38,4557)">
+                    </g>
+                    <text x="8275px" y="4557px" style="font-family:'Helvetica-Light', 'Helvetica', sans-serif;font-weight:300;font-size:484.781px;fill:rgb(64,64,64);">A<tspan x="8607.56px 8912.97px 9326.01px 9442.84px " y="4557px 4557px 4557px 4557px ">dmin</tspan></text>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
