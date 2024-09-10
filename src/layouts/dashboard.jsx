@@ -11,7 +11,7 @@ export function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const isLooged = localStorage.getItem("accessToken");
+    const isLooged = JSON.parse(localStorage.getItem("accessToken"));
     if (!isLooged) {
       navigation("/auth/sign-in");
     }

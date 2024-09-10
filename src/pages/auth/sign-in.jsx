@@ -1,13 +1,21 @@
 import supabase from "@/configs/supabase";
-import {Input, Checkbox, Button, Typography} from "@material-tailwind/react";
+import {WEB_CONFIG} from "@/configs/website-config";
+import {
+  ArrowLongRightIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+} from "@heroicons/react/24/solid";
+import {Input, Button, Typography} from "@material-tailwind/react";
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {toast} from "react-toastify";
 
 export function SignIn() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({email: "", password: ""});
+  const [isLoading, setIsLoading] = useState(false);
 
   const validate = () => {
     let valid = true;
@@ -31,16 +39,57 @@ export function SignIn() {
     e.preventDefault();
     if (!validate()) return;
 
-    const {data, error} = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-    if (!data) {
-      throw error;
-    } else {
-      const accessToken = data.session.access_token;
-      localStorage.setItem("accessToken", accessToken);
-      await fetchRestaurantData(data.user.id);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("https://www.qrcuisine.com/api/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const result = await response.json();
+      console.log("object", result);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error(result.error);
+        } else if (response.status === 403) {
+          toast.warning(
+            <div className="w-full flex flex-col select-none cursor-move">
+              <Typography variant="paragraph" className="font-medium" color="blue-gray">
+                Your account is currently under verification.
+              </Typography>
+              <Typography
+                variant="small"
+                className="font-normal opacity-70"
+                color="blue-gray">
+                The verification process may take up to 5 to 10 days. You will be notified
+                once it's complete. Thank you for your patience.
+              </Typography>
+            </div>,
+          );
+        } else {
+          toast.error("Something went wrong!");
+        }
+        return;
+      }
+
+      localStorage.setItem(
+        "accessToken",
+        JSON.stringify(result.data.session.access_token),
+      );
+
+      await fetchRestaurantData(result.data.user.id);
+    } catch (error) {
+      toast.error("An error occurred while processing your request.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,41 +103,62 @@ export function SignIn() {
     if (!data) {
       throw error;
     } else {
-      localStorage.setItem("restaurants_id", data.id);
-      localStorage.setItem("cloudName", data.cloud_name);
-      localStorage.setItem("uploadPreset", data.upload_preset);
-      localStorage.setItem("restaurantName", data.unique_name);
+      localStorage.setItem("restaurants_id", JSON.stringify(data.id));
+      localStorage.setItem("cloudName", JSON.stringify(data.cloud_name));
+      localStorage.setItem("uploadPreset", JSON.stringify(data.upload_preset));
+      localStorage.setItem("restaurantName", JSON.stringify(data.unique_name));
+
       navigate("/dashboard/home");
     }
   };
+
   return (
-    <section className="flex flex-col lg:flex-row h-screen overflow-hidden gap-4 p-8">
-      <div className="w-full lg:w-3/5 flex h-full flex-col justify-center">
-        <div className="text-center">
-          <Typography variant="h2" className="font-bold mb-4">
-            Sign In
-          </Typography>
+    <section className=" flex flex-col lg:flex-row h-screen overflow-hidden xl:gap-20 gap-10 p-8  justify-center items-center">
+      <div className="hidden lg:flex lg:w-1/2 h-full justify-center items-center relative rounded-3xl">
+        <img
+          src="/login.jpg"
+          className="h-full w-full object-cover rounded-3xl object-top"
+        />
+        <div className="w-full h-full bg-gradient-to-t from-green-500/100 via-green-500/50 to-green-500/5 absolute top-0 rounded-3xl" />
+
+        <div className="w-full absolute bottom-0 px-5 py-10 justify-center flex flex-col items-center z-30 gap-3">
           <Typography
-            variant="paragraph"
-            color="blue-gray"
-            className="text-lg font-normal">
-            Enter your email and password to Sign In.
+            variant="h6"
+            className="font-normal uppercase text-center"
+            color="white">
+            One Platform for all restaurant statistics
+          </Typography>
+          <Typography variant="h2" className="font-medium text-center" color="white">
+            Food Menu, Manage Orders, Analytics
+          </Typography>
+          <Typography variant="h5" className="font-normal text-center" color="white">
+            <span className="text-green-50 font-bold">Qrcuisine </span>
+            Most Efficient Restaurant Management Tools
           </Typography>
         </div>
-        <form
-          className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2"
-          onSubmit={handleSubmit}>
-          <div className="mb-1 flex flex-col gap-5">
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Your email
-            </Typography>
+      </div>
+      <div className="w-full lg:w-1/2 h-full  flex flex-col justify-center gap-8  pr-0">
+        <img
+          src="/login.jpg"
+          className="h-32 w-full object-cover rounded-3xl mb-5 lg:hidden flex"
+        />
+        <img src={WEB_CONFIG?.logo} alt="logo" title="logo" className="w-48" />
+        <div className="flex flex-col gap-2">
+          <Typography variant="h1" className="font-medium" color="blue-gray">
+            Dashboard Log In
+          </Typography>
+          <Typography variant="h6" className="font-normal opacity-75" color="blue-gray">
+            Enter your email address and password for log in.
+          </Typography>
+        </div>
+        <form className="w-full" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-6">
             <Input
+              type="email"
               size="lg"
-              placeholder="example@mail.com"
-              className="!border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
+              label="Email Address"
+              placeholder="example@gmail.com"
+              icon={<EnvelopeIcon />}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -97,17 +167,12 @@ export function SignIn() {
                 {errors.email}
               </Typography>
             )}
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Password
-            </Typography>
             <Input
               type="password"
               size="lg"
-              placeholder="********"
-              className="!border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
+              label="Password"
+              placeholder="example123"
+              icon={<LockClosedIcon />}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -117,29 +182,17 @@ export function SignIn() {
               </Typography>
             )}
           </div>
-          <Checkbox
-            label={
-              <Typography
-                variant="small"
-                color="gray"
-                className="flex items-center justify-start font-medium">
-                I agree to the&nbsp;
-                <a
-                  href="#"
-                  className="font-normal text-black transition-colors hover:text-gray-900 underline">
-                  Terms and Conditions
-                </a>
-              </Typography>
-            }
-            containerProps={{className: "-ml-2.5"}}
-          />
-          <Button type="submit" className="mt-6" fullWidth>
-            Sign In
+          <Button
+            loading={isLoading}
+            color="green"
+            type="submit"
+            className="mt-8 flex items-center justify-center gap-3"
+            fullWidth
+            size="lg">
+            Log In
+            <ArrowLongRightIcon className="h-6 w-6" />
           </Button>
         </form>
-      </div>
-      <div className="hidden lg:flex lg:w-2/5 h-full justify-center items-center">
-        <img src="/img/pattern.png" className="h-full w-full object-cover rounded-3xl" />
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 export const uploadImageToCloudinary = async (imageFile) => {
-  const cloudName = await localStorage.getItem("cloudName");
-  const uploadPreset = await localStorage.getItem("uploadPreset");
+  const cloudName = JSON.parse(await localStorage.getItem("cloudName"));
+  const uploadPreset = JSON.parse(await localStorage.getItem("uploadPreset"));
+
   const formData = new FormData();
   formData.append("file", imageFile);
   formData.append("upload_preset", uploadPreset);

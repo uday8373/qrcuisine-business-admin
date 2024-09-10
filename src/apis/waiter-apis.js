@@ -1,6 +1,7 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = localStorage.getItem("restaurants_id");
+const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
+
 export async function getAllWaiters(page, pageSize, status, searchQuery) {
   try {
     let query = supabase

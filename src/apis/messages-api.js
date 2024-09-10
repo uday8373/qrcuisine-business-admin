@@ -1,6 +1,6 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = localStorage.getItem("restaurants_id");
+const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
 
 // Initialize real-time updates for messages
 export function subscribeToMessages(callback) {

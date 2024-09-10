@@ -104,7 +104,8 @@ export function Tables() {
   useEffect(() => {
     fetchTablesData();
     fetchTableCount();
-    const restaurantId = localStorage.getItem("restaurants_id");
+
+    const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
     const tableSubscription = supabase
       .channel("tables")
       .on(

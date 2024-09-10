@@ -8,6 +8,9 @@ module.exports = withMT({
       borderRadius: {
         "custom-shape": "25% 25% 25% 0% / 25% 25% 25% 25%",
       },
+      screens: {
+        "2xl": "1440px",
+      },
     },
   },
   plugins: [],
