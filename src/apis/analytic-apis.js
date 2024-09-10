@@ -4,8 +4,7 @@ import moment from "moment";
 // const restaurantId = (localStorage.getItem("restaurants_id"));
 
 export async function getOrdersApi(timeRange, restaurantId) {
-  console.log("RES-ID-INSIDE API", restaurantId);
-  
+
   try {
     let currentStartDate;
     let currentEndDate;
