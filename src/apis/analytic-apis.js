@@ -1,6 +1,26 @@
 import supabase from "@/configs/supabase";
 import moment from "moment";
 
+export async function getRestaurant() {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  try {
+    const {data, error} = await supabase
+      .from("restaurants")
+      .select("restaurant_name, id")
+      .eq("id", restaurantId)
+      .single();
+
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
 export async function getOrdersApi(timeRange, restaurantId) {
   try {
     let currentStartDate;

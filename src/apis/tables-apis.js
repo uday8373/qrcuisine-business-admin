@@ -111,7 +111,7 @@ export async function insertTables(numberOfTables) {
       throw error;
     } else {
       for (const table of data) {
-        const formattedTableNo = table.table_no().padStart(2, "0");
+        const formattedTableNo = table.table_no?.padStart(2, "0");
         const qrCodeDataUrl = await generateQRCode(restaurant_name, table.id);
         const qrImageUrl = await generateQRTemplateImage(formattedTableNo, qrCodeDataUrl);
         const cloudinaryUrl = await uploadImageToCloudinary(qrImageUrl);

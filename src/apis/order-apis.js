@@ -89,6 +89,66 @@ export async function updateOrder(value) {
   }
 }
 
+export async function updateStatusOrder(value) {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  try {
+    const updates = {
+      status_id: value.status_id,
+    };
+
+    if (value.sorting === 3) {
+      updates.is_delivered = true;
+      updates.delivered_time = new Date().toISOString();
+    }
+
+    const {data, error} = await supabase
+      .from("orders")
+      .update(updates)
+      .eq("id", value.id)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    let message;
+    let subMessage;
+    if (value.sorting === 1) {
+      message = "Order Confirmed!";
+      subMessage = "Your Order has been confirmed.";
+    } else if (value.sorting === 2) {
+      message = "Order Prepared!";
+      subMessage = "Your Order has been Preparing.";
+    } else if (value.sorting === 3) {
+      message = "Order Delivered!";
+      subMessage = "Your Order has been delivered.";
+    }
+
+    if (message) {
+      const {error: messageError} = await supabase.from("messages").insert({
+        order_id: value.id,
+        message: message,
+        sub_message: subMessage,
+        table_id: value.table_id,
+        restaurant_id: restaurantId,
+        user_id: value.user_id,
+        waiter_id: null,
+        is_read: true,
+        user_read: false,
+      });
+
+      if (messageError) {
+        throw messageError;
+      }
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+}
+
 export async function getWaiters() {
   const restaurantId = localStorage.getItem("restaurants_id");
   try {
@@ -96,6 +156,7 @@ export async function getWaiters() {
       .from("waiters")
       .select(`*`)
       .eq("restaurant_id", restaurantId)
+      .eq("status", true)
       .order("name", {ascending: true});
 
     if (error) {

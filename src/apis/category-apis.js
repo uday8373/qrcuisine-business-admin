@@ -30,6 +30,33 @@ export async function getAllCategories(page, pageSize, status, searchQuery) {
   }
 }
 
+export async function getCategoryCounts() {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  try {
+    const {data, error} = await supabase
+      .from("menu_category")
+      .select("status")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      throw error;
+    }
+
+    const total = data.length;
+    const available = data.filter((table) => table.status).length;
+    const unAvailable = total - available;
+
+    return {
+      total,
+      available,
+      unAvailable,
+    };
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    throw error;
+  }
+}
+
 export async function insertCategory(value) {
   const restaurantId = localStorage.getItem("restaurants_id");
   try {

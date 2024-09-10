@@ -1,6 +1,7 @@
 import {
   deleteWaiter,
   getAllWaiters,
+  getWaiterCounts,
   insertWaiter,
   updateWaiter,
 } from "@/apis/waiter-apis";
@@ -27,22 +28,7 @@ import {
 } from "@material-tailwind/react";
 import React, {useEffect, useState} from "react";
 
-const TABS = [
-  {
-    label: "All",
-    value: "all",
-  },
-  {
-    label: "Available",
-    value: "true",
-  },
-  {
-    label: "Unavailable",
-    value: "false",
-  },
-];
-
-const TABLE_HEAD = ["Name", "Status", "Created", "Action"];
+const TABLE_HEAD = ["Created", "Name", "Status", "Action"];
 
 export function WaiterTable() {
   const [waiterData, setWaiterData] = useState([]);
@@ -61,7 +47,23 @@ export function WaiterTable() {
   const [errors, setErrors] = useState({});
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const isTesting = false;
+  const [tabs, setTabs] = useState([
+    {
+      label: "All",
+      value: "all",
+      count: 0,
+    },
+    {
+      label: "Available",
+      value: "true",
+      count: 0,
+    },
+    {
+      label: "Unavailable",
+      value: "false",
+      count: 0,
+    },
+  ]);
 
   const fetchWaiterData = async () => {
     const waiterResult = await getAllWaiters(currentPage, maxRow, activeTab, searchQuery);
@@ -71,14 +73,20 @@ export function WaiterTable() {
     }
     setLoading(false);
   };
+  const fetchCount = async () => {
+    const result = await getWaiterCounts();
+    if (result) {
+      setTabs([
+        {label: "All", value: "all", count: result.total},
+        {label: "Available", value: "true", count: result.available},
+        {label: "Unavailable", value: "false", count: result.unAvailable},
+      ]);
+    }
+  };
 
   useEffect(() => {
-    if (isTesting) {
-      setWaiterData([]);
-      setLoading(false);
-    } else {
-      fetchWaiterData();
-    }
+    fetchWaiterData();
+    fetchCount();
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
@@ -116,6 +124,7 @@ export function WaiterTable() {
       setFormLoading(false);
       toogleAddModal();
       fetchWaiterData();
+      fetchCount();
     }
   };
 
@@ -162,6 +171,7 @@ export function WaiterTable() {
       setFormLoading(false);
       toggleUpdateModal();
       fetchWaiterData();
+      fetchCount();
     }
   };
 
@@ -187,6 +197,7 @@ export function WaiterTable() {
       setFormLoading(false);
       toggleDeleteModal();
       fetchWaiterData();
+      fetchCount();
     }
   };
 
@@ -215,9 +226,16 @@ export function WaiterTable() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <Tabs value="all" className="w-full md:w-max">
               <TabsHeader>
-                {TABS.map(({label, value}) => (
-                  <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                {tabs.map(({label, value, count}) => (
+                  <Tab
+                    className="flex whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleTabChange(value)}>
+                    <div className="flex items-center gap-2">
+                      {label}
+                      <Chip variant="ghost" value={count} size="sm" />
+                    </div>
                   </Tab>
                 ))}
               </TabsHeader>
@@ -237,6 +255,16 @@ export function WaiterTable() {
               />
             </div>
           </div>
+          <div className="mt-5 flex gap-4">
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-green-500 rounded-md" />
+              Available
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-gray-700 rounded-md" />
+              Unavailable
+            </div>
+          </div>
         </CardHeader>
         <CardBody className="overflow-scroll px-0">
           {loading ? (
@@ -250,22 +278,22 @@ export function WaiterTable() {
                   {TABLE_HEAD.map((head, index) => (
                     <th
                       key={head}
-                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors">
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
                         {head}{" "}
-                        {index !== TABLE_HEAD.length - 1 && (
+                        {/* {index !== TABLE_HEAD.length - 1 && (
                           <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                        )}
+                        )} */}
                       </Typography>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody
-                className={`${waiterData.length === 0 && "h-[300px]"} relative w-full}`}>
+                className={`${waiterData.length === 0 && "h-[350px]"} relative w-full}`}>
                 {waiterData.length === 0 ? (
                   <div className="w-full absolute flex justify-center items-center h-full">
                     <Typography variant="h6" color="blue-gray" className="font-normal">
@@ -279,6 +307,29 @@ export function WaiterTable() {
 
                     return (
                       <tr key={index}>
+                        <td
+                          className={`${classes} ${
+                            status ? "bg-green-500" : "bg-gray-700"
+                          } bg-opacity-20 relative w-36`}>
+                          <div
+                            className={`w-2 h-full top-0 absolute left-0  ${
+                              status ? "bg-green-500" : "bg-gray-700"
+                            }`}
+                          />
+                          <Chip
+                            variant="ghost"
+                            color={status ? "green" : "gray"}
+                            size="lg"
+                            value={new Date(created_at)
+                              .toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                              .replace(/-/g, " ")}
+                            className="text-sm font-bold z-30 w-fit ml-2"
+                          />
+                        </td>
                         <td className={classes}>
                           <div className="flex items-center gap-3">
                             <div className="flex flex-col">
@@ -302,20 +353,7 @@ export function WaiterTable() {
                             />
                           </div>
                         </td>
-                        <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal">
-                            {new Date(created_at)
-                              .toLocaleDateString("en-IN", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })
-                              .replace(/-/g, " ")}
-                          </Typography>
-                        </td>
+
                         <td className={`${classes} w-28`}>
                           <Tooltip content="Edit Waiter">
                             <IconButton

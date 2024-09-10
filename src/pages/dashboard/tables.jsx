@@ -105,7 +105,7 @@ export function Tables() {
     fetchTablesData();
     fetchTableCount();
 
-    const restaurantId = (localStorage.getItem("restaurants_id"));
+    const restaurantId = localStorage.getItem("restaurants_id");
     const tableSubscription = supabase
       .channel("tables")
       .on(
@@ -364,15 +364,15 @@ export function Tables() {
                   {TABLE_HEAD.map((head, index) => (
                     <th
                       key={head}
-                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors">
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="flex text-[11px] uppercase items-center justify-between gap-2 font-bold leading-none text-blue-gray-400">
                         {head}{" "}
-                        {index !== TABLE_HEAD.length - 1 && (
+                        {/* {index !== TABLE_HEAD.length - 1 && (
                           <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                        )}
+                        )} */}
                       </Typography>
                     </th>
                   ))}

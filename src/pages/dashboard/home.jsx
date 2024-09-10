@@ -8,6 +8,7 @@ import {
   Tabs,
   Tab,
   TabsHeader,
+  Spinner,
 } from "@material-tailwind/react";
 import {StatisticsCard} from "@/widgets/cards";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@heroicons/react/24/solid";
 import {
   getOrdersApi,
+  getRestaurant,
   getRevenueChartApi,
   getUserChartApi,
   getUsersApi,
@@ -44,6 +46,8 @@ const chartTabs = [
 ];
 
 export function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [restaurantData, setRestaurantData] = useState({});
   const [orderTotalAmount, setOrderTotalAmount] = useState(0);
   const [orderTotalAmountChange, setOrderTotalAmountChange] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -86,12 +90,12 @@ export function Home() {
     },
   ]);
 
-  const restaurantId = localStorage.getItem("restaurants_id")
+  const restaurantId = localStorage.getItem("restaurants_id");
 
   useEffect(() => {
     console.log("RESTAURENT ID", restaurantId);
-    
-    if(restaurantId) {
+
+    if (restaurantId) {
       fetchData();
     }
   }, [selectedTab, activeChartTab, restaurantId]);
@@ -99,12 +103,14 @@ export function Home() {
   const fetchData = async () => {
     try {
       const [
+        restaurantResponse,
         orderResponse,
         userResponse,
         visitorResponse,
         userChartResponse,
         revenueChartResponse,
       ] = await Promise.all([
+        getRestaurant(),
         getOrdersApi(selectedTab, restaurantId),
         getUsersApi(selectedTab, restaurantId),
         getVisitorApi(activeChartTab, restaurantId),
@@ -112,6 +118,7 @@ export function Home() {
         getRevenueChartApi(activeChartTab, restaurantId),
       ]);
       if (
+        !restaurantResponse ||
         !orderResponse ||
         !userResponse ||
         !visitorResponse ||
@@ -120,6 +127,8 @@ export function Home() {
       ) {
         throw new Error("Failed to fetch data");
       }
+
+      setRestaurantData(restaurantResponse);
 
       // Total Revenue Statistics ✅
       const totalAmount = orderResponse.currentData
@@ -399,6 +408,8 @@ export function Home() {
       setTrendingFoods(trendingFoodsArray.slice(0, 5));
     } catch (error) {
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -469,13 +480,21 @@ export function Home() {
     return {newUsers, returningUsers};
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex w-full justify-center items-center h-[78vh]">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
   return (
     <div className="mt-12">
       <Card className="border border-blue-gray-100 shadow-sm mb-5">
         <CardBody className="w-full flex justify-between lg:items-center items-start px-4 py-8 lg:flex-row flex-col gap-5">
           <div className="flex flex-col gap-2">
             <Typography variant="h4" className="font-semibold text-blue-gray-900">
-              Hello, Thek Restaurant 👋
+              Hello, {restaurantData?.restaurant_name} 👋
             </Typography>
             <Typography variant="h6" className="font-normal text-blue-gray-600">
               Let's check your stats!

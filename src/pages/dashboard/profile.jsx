@@ -13,6 +13,7 @@ import {
   MenuItem,
   Menu,
   IconButton,
+  Spinner,
 } from "@material-tailwind/react";
 import {
   HomeIcon,
@@ -58,6 +59,14 @@ export function Profile() {
       fetchRestaurantData();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center w-full justify-center h-[78vh]">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <>
