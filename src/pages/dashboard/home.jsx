@@ -89,6 +89,8 @@ export function Home() {
   const restaurantId = localStorage.getItem("restaurants_id")
 
   useEffect(() => {
+    console.log("RESTAURENT ID", restaurantId);
+    
     if(restaurantId) {
       fetchData();
     }
