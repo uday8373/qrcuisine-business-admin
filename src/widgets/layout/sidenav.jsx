@@ -170,8 +170,8 @@ export function Sidenav({routes}) {
 }
 
 Sidenav.defaultProps = {
-  brandImg: "/img/logo-long.svg",
-  brandName: "TableQR",
+  brandImg: "/logo-business.svg",
+  brandName: "QrCuisine",
 };
 
 Sidenav.propTypes = {
