@@ -103,10 +103,10 @@ export function SignIn() {
     if (!data) {
       throw error;
     } else {
-      localStorage.setItem("restaurants_id", JSON.stringify(data.id));
-      localStorage.setItem("cloudName", JSON.stringify(data.cloud_name));
-      localStorage.setItem("uploadPreset", JSON.stringify(data.upload_preset));
-      localStorage.setItem("restaurantName", JSON.stringify(data.unique_name));
+      localStorage.setItem("restaurants_id", data.id);
+      localStorage.setItem("cloudName", (data.cloud_name));
+      localStorage.setItem("uploadPreset", (data.upload_preset));
+      localStorage.setItem("restaurantName", (data.unique_name));
 
       navigate("/dashboard/home");
     }

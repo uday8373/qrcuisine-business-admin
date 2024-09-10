@@ -3,9 +3,9 @@ import QRCode from "qrcode";
 import {uploadImageToCloudinary} from "./cloudinary-upload";
 import html2canvas from "html2canvas";
 
-const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
+const restaurantId = (localStorage.getItem("restaurants_id"));
 
-const restaurant_name = JSON.parse(localStorage.getItem("restaurantName"));
+const restaurant_name = (localStorage.getItem("restaurantName"));
 export async function getAllTables(page, pageSize, status, searchQuery) {
   try {
     let query = supabase

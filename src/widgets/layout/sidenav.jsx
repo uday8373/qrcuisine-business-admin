@@ -36,7 +36,7 @@ export function Sidenav({routes}) {
 
   useEffect(() => {
     fetchOrdersCount();
-    const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
+    const restaurantId = (localStorage.getItem("restaurants_id"));
 
     const orderSubscription = supabase
       .channel("orders")
@@ -61,7 +61,7 @@ export function Sidenav({routes}) {
 
   useEffect(() => {
     fetchBookedTablesCount();
-    const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
+    const restaurantId = (localStorage.getItem("restaurants_id"));
 
     const tableSubscription = supabase
       .channel("tables")
