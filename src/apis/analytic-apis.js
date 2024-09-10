@@ -1,9 +1,11 @@
 import supabase from "@/configs/supabase";
 import moment from "moment";
 
-const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
+// const restaurantId = (localStorage.getItem("restaurants_id"));
 
-export async function getOrdersApi(timeRange) {
+export async function getOrdersApi(timeRange, restaurantId) {
+  console.log("RES-ID-INSIDE API", restaurantId);
+  
   try {
     let currentStartDate;
     let currentEndDate;
@@ -92,7 +94,7 @@ export async function getOrdersApi(timeRange) {
   }
 }
 
-export async function getUsersApi(timeRange) {
+export async function getUsersApi(timeRange, restaurantId) {
   try {
     let startDate, endDate, previousStartDate, previousEndDate;
 
@@ -175,7 +177,7 @@ export async function getUsersApi(timeRange) {
   }
 }
 
-export async function getVisitorApi(timeRange) {
+export async function getVisitorApi(timeRange, restaurantId) {
   try {
     let startDate;
     let endDate;
@@ -211,7 +213,7 @@ export async function getVisitorApi(timeRange) {
   }
 }
 
-export async function getUserChartApi(timeRange) {
+export async function getUserChartApi(timeRange, restaurantId) {
   try {
     let startDate;
     let endDate;
@@ -246,7 +248,7 @@ export async function getUserChartApi(timeRange) {
   }
 }
 
-export async function getRevenueChartApi(timeRange) {
+export async function getRevenueChartApi(timeRange, restaurantId) {
   try {
     let startDate;
     let endDate;
