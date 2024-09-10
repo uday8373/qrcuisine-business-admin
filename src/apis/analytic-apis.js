@@ -1,10 +1,7 @@
 import supabase from "@/configs/supabase";
 import moment from "moment";
 
-// const restaurantId = (localStorage.getItem("restaurants_id"));
-
 export async function getOrdersApi(timeRange, restaurantId) {
-
   try {
     let currentStartDate;
     let currentEndDate;

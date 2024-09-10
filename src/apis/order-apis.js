@@ -1,8 +1,7 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = (localStorage.getItem("restaurants_id"));
-
 export async function getAllOrders(page, pageSize, status, searchQuery) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     let query = supabase
       .from("orders")
@@ -34,6 +33,7 @@ export async function getAllOrders(page, pageSize, status, searchQuery) {
 }
 
 export async function getOrdersCounts() {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("orders")
@@ -90,6 +90,7 @@ export async function updateOrder(value) {
 }
 
 export async function getWaiters() {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("waiters")
