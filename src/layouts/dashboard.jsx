@@ -19,16 +19,16 @@ export function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-blue-gray-50/50">
+    <div className="min-h-screen bg-blue-gray-50/50 relative">
       <Sidenav
         routes={routes}
         brandImg={sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"}
       />
-      <div className="p-4 xl:ml-80">
+      <div className="p-4 xl:ml-80 min-h-screen flex flex-col">
         <DashboardNavbar />
         <Configurator />
         {isLoading ? (
-          <div className="flex justify-center w-full items-center h-screen">
+          <div className="flex justify-center w-full items-center min-h-screen relative">
             <div className="spinner-border text-primary" role="status">
               <span className="sr-only">Loading...</span>
             </div>
@@ -44,7 +44,7 @@ export function Dashboard() {
             )}
           </Routes>
         )}
-        <div className="text-blue-gray-600">
+        <div className="text-blue-gray-600 mt-auto py-3">
           <Footer />
         </div>
       </div>
