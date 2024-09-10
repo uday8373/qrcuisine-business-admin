@@ -1,6 +1,6 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = (localStorage.getItem("restaurants_id"));
+const restaurantId = localStorage.getItem("restaurants_id");
 
 export async function getAllCategories(page, pageSize, status, searchQuery) {
   try {
@@ -68,6 +68,7 @@ export async function updateCategory(value) {
   }
 }
 
+// Delete a category
 export async function deleteCategory(value) {
   try {
     const {data, error} = await supabase
