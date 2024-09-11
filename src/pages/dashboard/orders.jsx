@@ -5,6 +5,7 @@ import {
   getWaiters,
   updateOrder,
   updateStatusOrder,
+  updateWaiterOrder,
 } from "@/apis/order-apis";
 import {ViewOrderDrawer} from "@/components/order-modal/view-order";
 import supabase from "@/configs/supabase";
@@ -164,6 +165,17 @@ export function Orders() {
     }
   };
 
+  const handleUpdateWaiterOrder = async (orderId, updates) => {
+    try {
+      await updateWaiterOrder({
+        id: orderId,
+        ...updates,
+      });
+    } catch (error) {
+      console.error("Failed to update order:", error);
+    }
+  };
+
   const handleStatusUpdateOrder = async (orderId, updates) => {
     try {
       await updateStatusOrder({
@@ -175,8 +187,13 @@ export function Orders() {
     }
   };
 
-  const handleWaiterChange = (orderId, waiterId) => {
-    handleUpdateOrder(orderId, {waiter_id: waiterId});
+  const handleWaiterChange = (orderId, waiter_id, table_id, user_id, waiter_name) => {
+    handleUpdateWaiterOrder(orderId, {
+      waiter_id: waiter_id,
+      table_id: table_id,
+      user_id: user_id,
+      name: waiter_name,
+    });
   };
 
   const handlePreparationTimeChange = (orderId, newTime, oldTime) => {
@@ -235,7 +252,7 @@ export function Orders() {
   };
 
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12 min-h-screen">
+    <div className="mt-6 mb-8 flex flex-col gap-12 min-h-screen">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-8 flex items-center justify-between gap-8">
@@ -530,7 +547,15 @@ export function Orders() {
                                   {waitersData.map((waiter, index) => (
                                     <MenuItem
                                       key={index}
-                                      onClick={() => handleWaiterChange(id, waiter.id)}>
+                                      onClick={() =>
+                                        handleWaiterChange(
+                                          id,
+                                          waiter.id,
+                                          table_id.id,
+                                          user_id.id,
+                                          waiter.name,
+                                        )
+                                      }>
                                       {waiter?.name}
                                     </MenuItem>
                                   ))}

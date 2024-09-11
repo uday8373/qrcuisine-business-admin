@@ -54,7 +54,6 @@ export function SignIn() {
       });
 
       const result = await response.json();
-      console.log("object", result);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -104,9 +103,9 @@ export function SignIn() {
       throw error;
     } else {
       localStorage.setItem("restaurants_id", data.id);
-      localStorage.setItem("cloudName", (data.cloud_name));
-      localStorage.setItem("uploadPreset", (data.upload_preset));
-      localStorage.setItem("restaurantName", (data.unique_name));
+      localStorage.setItem("cloudName", data.cloud_name);
+      localStorage.setItem("uploadPreset", data.upload_preset);
+      localStorage.setItem("restaurantName", data.unique_name);
 
       navigate("/dashboard/home");
     }

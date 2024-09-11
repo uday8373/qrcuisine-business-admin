@@ -50,7 +50,6 @@ export default function Ratings() {
         searchQuery,
       );
       if (ratingsResult) {
-        console.log("result", ratingsResult);
         setRatingsData(ratingsResult.data);
         setMaxItems(ratingsResult.count || 0);
       }
@@ -68,7 +67,6 @@ export default function Ratings() {
   const handleTabChange = (value) => {
     setActiveTab(value);
     setCurrentPage(1);
-    console.log("CurrentValue: ", value);
   };
   const totalPages = Math.ceil(maxItems / maxRow);
 
@@ -91,7 +89,7 @@ export default function Ratings() {
     return stars;
   };
   return (
-    <div className="mt-8">
+    <div className="mt-6">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-5 flex  items-center justify-between gap-8">

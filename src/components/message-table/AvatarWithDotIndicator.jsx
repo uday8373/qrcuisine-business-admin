@@ -11,18 +11,12 @@ export default function AvatarWithDotIndicator({messageResult}) {
   return (
     <>
       <div className="flex gap-3 items-center">
-        <Avatar
-          size="lg"
-          src={restaurantName?.logo || "/public/img/restaurant.png"}
-          alt="avatar"
-        />
+        <Avatar size="lg" src={restaurantName?.logo} alt="avatar" variant="rounded" />
 
         <div>
-          <Typography variant="h6">
-            {restaurantName?.restaurant_name || "Restaurant "}
-          </Typography>
+          <Typography variant="h6">{restaurantName?.restaurant_name}</Typography>
           <Typography variant="small" color="gray" className="font-normal">
-            {restaurantName?.owner_name || "Owner "}
+            {restaurantName?.owner_name}
           </Typography>
         </div>
       </div>

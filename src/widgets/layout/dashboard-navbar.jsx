@@ -71,9 +71,9 @@ export function DashboardNavbar() {
               {page}
             </Typography>
           </Breadcrumbs>
-          <Typography variant="h6" color="blue-gray">
+          {/* <Typography variant="h6" color="blue-gray">
             {page}
-          </Typography>
+          </Typography> */}
         </div>
         <div className="flex items-center">
           <Menu>
@@ -197,7 +197,7 @@ export function DashboardNavbar() {
             variant="text"
             color="blue-gray"
             onClick={() => setOpenConfigurator(dispatch, true)}>
-            <CogIcon className="h-5 w-5 text-blue-gray-500" />
+            <CogIcon className="h-7 w-7 text-blue-gray-500" />
           </IconButton>
           <IconButton
             variant="text"

@@ -280,7 +280,7 @@ export function Tables() {
   };
 
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12 min-h-[100vh]">
+    <div className="mt-6 mb-8 flex flex-col gap-12 min-h-[100vh]">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none pb-8">
           <div className="mb-5 flex items-center justify-between gap-8">
