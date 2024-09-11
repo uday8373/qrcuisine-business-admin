@@ -1,6 +1,7 @@
 import {
   deleteCategory,
   getAllCategories,
+  getCategoryCounts,
   insertCategory,
   updateCategory,
 } from "@/apis/category-apis";
@@ -27,22 +28,7 @@ import {
 } from "@material-tailwind/react";
 import React, {useEffect, useState} from "react";
 
-const TABS = [
-  {
-    label: "All",
-    value: "all",
-  },
-  {
-    label: "Available",
-    value: "true",
-  },
-  {
-    label: "Unavailable",
-    value: "false",
-  },
-];
-
-const TABLE_HEAD = ["Title", "Status", "Created", "Action"];
+const TABLE_HEAD = ["Created", "Title", "Status", "Action"];
 
 export function Category() {
   const [categoryData, setCategoryData] = useState([]);
@@ -61,7 +47,23 @@ export function Category() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const isTesting = false;
+  const [tabs, setTabs] = useState([
+    {
+      label: "All",
+      value: "all",
+      count: 0,
+    },
+    {
+      label: "Available",
+      value: "true",
+      count: 0,
+    },
+    {
+      label: "Unavailable",
+      value: "false",
+      count: 0,
+    },
+  ]);
 
   const fetchCategoryData = async () => {
     const categoryResult = await getAllCategories(
@@ -79,14 +81,21 @@ export function Category() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (isTesting) {
-      setCategoryData([]);
-      setLoading(false);
-    } else {
-      fetchCategoryData();
+  const fetchCount = async () => {
+    const result = await getCategoryCounts();
+    if (result) {
+      setTabs([
+        {label: "All", value: "all", count: result.total},
+        {label: "Available", value: "true", count: result.available},
+        {label: "Unavailable", value: "false", count: result.unAvailable},
+      ]);
     }
-  }, [isTesting, maxRow, currentPage, activeTab, searchQuery]);
+  };
+
+  useEffect(() => {
+    fetchCategoryData();
+    fetchCount();
+  }, [maxRow, currentPage, activeTab, searchQuery]);
 
   const totalPages = Math.ceil(maxItems / maxRow);
 
@@ -137,6 +146,7 @@ export function Category() {
       setFormLoading(false);
       toogleAddModal();
       fetchCategoryData();
+      fetchCount();
     }
   };
 
@@ -153,6 +163,7 @@ export function Category() {
       setFormLoading(false);
       toggleUpdateModal();
       fetchCategoryData();
+      fetchCount();
     }
   };
 
@@ -163,7 +174,7 @@ export function Category() {
       newErrors.title = "Title is required";
     }
 
-    if (formData.status !== "true" && formData.status !== "false") {
+    if (formData.status !== true && formData.status !== false) {
       newErrors.status = "Status must be Available or Unavailable";
     }
 
@@ -193,6 +204,7 @@ export function Category() {
       setFormLoading(false);
       toggleDeleteModal();
       fetchCategoryData();
+      fetchCount();
     }
   };
 
@@ -221,9 +233,16 @@ export function Category() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <Tabs value={activeTab} className="w-full md:w-max">
               <TabsHeader>
-                {TABS.map(({label, value}) => (
-                  <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                {tabs.map(({label, value, count}) => (
+                  <Tab
+                    className="flex whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleTabChange(value)}>
+                    <div className="flex items-center gap-2">
+                      {label}
+                      <Chip variant="ghost" value={count} size="sm" />
+                    </div>
                   </Tab>
                 ))}
               </TabsHeader>
@@ -243,6 +262,16 @@ export function Category() {
               />
             </div>
           </div>
+          <div className="mt-5 flex gap-4">
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-green-500 rounded-md" />
+              Available
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-gray-700 rounded-md" />
+              Unavailable
+            </div>
+          </div>
         </CardHeader>
         <CardBody className="overflow-scroll px-0">
           {loading ? (
@@ -256,22 +285,22 @@ export function Category() {
                   {TABLE_HEAD.map((head, index) => (
                     <th
                       key={head}
-                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors">
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
                         {head}{" "}
-                        {index !== TABLE_HEAD.length - 1 && (
+                        {/* {index !== TABLE_HEAD.length - 1 && (
                           <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                        )}
+                        )} */}
                       </Typography>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody
-                className={`${categoryData.length === 0 && "h-[300px]"} relative w-full`}>
+                className={`${categoryData.length === 0 && "h-[350px]"} relative w-full`}>
                 {categoryData.length === 0 ? (
                   <div className="w-full absolute flex justify-center items-center h-full">
                     <Typography variant="h6" color="blue-gray" className="font-normal">
@@ -285,6 +314,29 @@ export function Category() {
 
                     return (
                       <tr key={index}>
+                        <td
+                          className={`${classes} ${
+                            status ? "bg-green-500" : "bg-gray-700"
+                          } bg-opacity-20 relative w-36`}>
+                          <div
+                            className={`w-2 h-full top-0 absolute left-0  ${
+                              status ? "bg-green-500" : "bg-gray-700"
+                            }`}
+                          />
+                          <Chip
+                            variant="ghost"
+                            color={status ? "green" : "gray"}
+                            size="lg"
+                            value={new Date(created_at)
+                              .toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                              .replace(/-/g, " ")}
+                            className="text-sm font-bold z-30 w-fit ml-2"
+                          />
+                        </td>
                         <td className={classes}>
                           <div className="flex items-center gap-3">
                             <div className="flex flex-col">
@@ -309,20 +361,7 @@ export function Category() {
                             />
                           </div>
                         </td>
-                        <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal">
-                            {new Date(created_at)
-                              .toLocaleDateString("en-IN", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })
-                              .replace(/-/g, " ")}
-                          </Typography>
-                        </td>
+
                         <td className={`${classes} w-28`}>
                           <Tooltip content="Edit Category">
                             <IconButton

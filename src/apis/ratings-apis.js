@@ -1,8 +1,7 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
-
 export async function getRatingsApis(page, pageSize, activeTab, searchQuery) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     let query = supabase
       .from("ratings")

@@ -3,10 +3,8 @@ import QRCode from "qrcode";
 import {uploadImageToCloudinary} from "./cloudinary-upload";
 import html2canvas from "html2canvas";
 
-const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
-
-const restaurant_name = JSON.parse(localStorage.getItem("restaurantName"));
 export async function getAllTables(page, pageSize, status, searchQuery) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     let query = supabase
       .from("tables")
@@ -58,6 +56,7 @@ export async function endSession(tableId) {
 }
 
 export async function getTableCounts() {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("tables")
@@ -84,6 +83,8 @@ export async function getTableCounts() {
 }
 
 export async function insertTables(numberOfTables) {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  const restaurant_name = localStorage.getItem("restaurantName");
   try {
     const highestTableNo = await getHighestTableNo();
     const newTables = [];
@@ -110,7 +111,7 @@ export async function insertTables(numberOfTables) {
       throw error;
     } else {
       for (const table of data) {
-        const formattedTableNo = table.table_no().padStart(2, "0");
+        const formattedTableNo = table.table_no?.padStart(2, "0");
         const qrCodeDataUrl = await generateQRCode(restaurant_name, table.id);
         const qrImageUrl = await generateQRTemplateImage(formattedTableNo, qrCodeDataUrl);
         const cloudinaryUrl = await uploadImageToCloudinary(qrImageUrl);
@@ -315,6 +316,7 @@ async function updateTableQRCode(tableId, qrCodeUrl) {
 }
 
 export async function getHighestTableNo() {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("tables")

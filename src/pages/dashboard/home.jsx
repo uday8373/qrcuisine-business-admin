@@ -8,6 +8,7 @@ import {
   Tabs,
   Tab,
   TabsHeader,
+  Spinner,
 } from "@material-tailwind/react";
 import {StatisticsCard} from "@/widgets/cards";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@heroicons/react/24/solid";
 import {
   getOrdersApi,
+  getRestaurant,
   getRevenueChartApi,
   getUserChartApi,
   getUsersApi,
@@ -44,6 +46,8 @@ const chartTabs = [
 ];
 
 export function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [restaurantData, setRestaurantData] = useState({});
   const [orderTotalAmount, setOrderTotalAmount] = useState(0);
   const [orderTotalAmountChange, setOrderTotalAmountChange] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -86,314 +90,328 @@ export function Home() {
     },
   ]);
 
+  const restaurantId = localStorage.getItem("restaurants_id");
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [
-          orderResponse,
-          userResponse,
-          visitorResponse,
-          userChartResponse,
-          revenueChartResponse,
-        ] = await Promise.all([
-          getOrdersApi(selectedTab),
-          getUsersApi(selectedTab),
-          getVisitorApi(activeChartTab),
-          getUserChartApi(activeChartTab),
-          getRevenueChartApi(activeChartTab),
-        ]);
-        if (
-          !orderResponse ||
-          !userResponse ||
-          !visitorResponse ||
-          !userChartResponse ||
-          !revenueChartResponse
-        ) {
-          throw new Error("Failed to fetch data");
+    console.log("RESTAURENT ID", restaurantId);
+
+    if (restaurantId) {
+      fetchData();
+    }
+  }, [selectedTab, activeChartTab, restaurantId]);
+
+  const fetchData = async () => {
+    try {
+      const [
+        restaurantResponse,
+        orderResponse,
+        userResponse,
+        visitorResponse,
+        userChartResponse,
+        revenueChartResponse,
+      ] = await Promise.all([
+        getRestaurant(),
+        getOrdersApi(selectedTab, restaurantId),
+        getUsersApi(selectedTab, restaurantId),
+        getVisitorApi(activeChartTab, restaurantId),
+        getUserChartApi(activeChartTab, restaurantId),
+        getRevenueChartApi(activeChartTab, restaurantId),
+      ]);
+      if (
+        !restaurantResponse ||
+        !orderResponse ||
+        !userResponse ||
+        !visitorResponse ||
+        !userChartResponse ||
+        !revenueChartResponse
+      ) {
+        throw new Error("Failed to fetch data");
+      }
+
+      setRestaurantData(restaurantResponse);
+
+      // Total Revenue Statistics ✅
+      const totalAmount = orderResponse.currentData
+        .filter((order) => order.is_delivered)
+        .reduce((accumulator, order) => {
+          return accumulator + order.grand_amount;
+        }, 0);
+      setOrderTotalAmount(totalAmount);
+
+      const previousTotalAmount = orderResponse.previousData
+        .filter((order) => order.is_delivered)
+        .reduce((accumulator, order) => {
+          return accumulator + order.grand_amount;
+        }, 0);
+      const orderTotalAmountChange = calculatePercentageChange(
+        totalAmount,
+        previousTotalAmount,
+      );
+      setOrderTotalAmountChange(orderTotalAmountChange);
+
+      // Peak Ordering Hour Statistics ✅
+      const orderHoursMap = {};
+
+      orderResponse.currentData.forEach((order) => {
+        const hour = moment(order.created_at).hour();
+        orderHoursMap[hour] = (orderHoursMap[hour] || 0) + 1;
+      });
+
+      const peakHour = Object.keys(orderHoursMap).reduce(
+        (a, b) => (orderHoursMap[a] > orderHoursMap[b] ? a : b),
+        0,
+      );
+
+      const lastPeakHour = Object.keys(orderHoursMap).reduce(
+        (a, b) => (orderHoursMap[a] < orderHoursMap[b] ? a : b),
+        0,
+      );
+
+      const peakHourFormatted = moment(peakHour, "HH").format("h A");
+      const lastPeakHourFormatted = moment(lastPeakHour, "HH").format("h A");
+
+      const peakHourEnd = (parseInt(peakHour) + 1) % 24;
+      const peakHourEndFormatted = moment(peakHourEnd, "HH").format("h A");
+      const peakOrderingHourRange = `${peakHourFormatted} to ${peakHourEndFormatted}`;
+
+      const lastPeakHourEnd = (parseInt(lastPeakHour) + 1) % 24;
+      const lastPeakHourEndFormatted = moment(lastPeakHourEnd, "HH").format("h A");
+      const lastPeakOrderingHourRange = `${lastPeakHourFormatted} to ${lastPeakHourEndFormatted}`;
+
+      setPeakOrderingHour(peakOrderingHourRange);
+      setLastPeakOrderingHour(lastPeakOrderingHourRange);
+
+      // Total Customers Statistics ✅
+      const uniqueCustomers = new Set(
+        userResponse.currentData.map((user) => user.deviceToken),
+      );
+      const previousUniqueCustomers = new Set(
+        userResponse.previousData.map((user) => user.deviceToken),
+      );
+      const totalCustomersChange = calculatePercentageChange(
+        uniqueCustomers.size,
+        previousUniqueCustomers.size,
+      );
+      setTotalCustomers(uniqueCustomers.size);
+      setTotalCustomersChange(totalCustomersChange);
+
+      // New Customers and Returning Statistics ✅
+      const {newUsers, returningUsers} = calculateNewAndReturningUsers(
+        userResponse.currentData,
+      );
+      const {newUsers: previousNewUsers, returningUsers: previousReturningUsers} =
+        calculateNewAndReturningUsers(userResponse.previousData);
+
+      setNewUsersCount(newUsers);
+      setReturningUsersCount(returningUsers);
+
+      const newUsersChange = calculatePercentageChange(newUsers, previousNewUsers);
+      const returningUsersChange = calculatePercentageChange(
+        returningUsers,
+        previousReturningUsers,
+      );
+
+      setNewUsersChange(newUsersChange);
+      setReturningUsersChange(returningUsersChange);
+
+      // Active Customers Statistics
+      const activeUsersCount = userResponse.currentData.filter(
+        (user) => user.is_active,
+      ).length;
+      const previousActiveUsersCount = userResponse.previousData.filter(
+        (user) => user.is_active,
+      ).length;
+
+      setActiveUsersCount(activeUsersCount);
+
+      const activeUsersChange = calculatePercentageChange(
+        activeUsersCount,
+        previousActiveUsersCount,
+      );
+
+      setActiveUsersChange(activeUsersChange);
+
+      // Visitor Chart Statistics ✅
+      const initializeDataMap = (keys, defaultValue) =>
+        keys.reduce((acc, key) => {
+          acc[key] = {...defaultValue};
+          return acc;
+        }, {});
+
+      const processVisitorData = (dataMap, item) => {
+        const {
+          website_visit,
+          booked_count,
+          checkout_count,
+          place_order_count,
+          order_confirm_count,
+          order_preparing_count,
+          order_delivered_count,
+        } = item;
+
+        dataMap.websiteVisits += website_visit;
+        dataMap.bookedCounts += booked_count;
+        dataMap.checkoutCounts += checkout_count;
+        dataMap.placeOrderCounts += place_order_count;
+        dataMap.orderConfirmCounts += order_confirm_count;
+        dataMap.orderPreparingCounts += order_preparing_count;
+        dataMap.orderDeliveredCounts += order_delivered_count;
+      };
+
+      const isWeekly = activeChartTab === "week";
+      const timeFormat = isWeekly ? "ddd" : "MMM";
+
+      const dataKeys = isWeekly
+        ? Array.from({length: 7}, (_, i) =>
+            moment().subtract(i, "days").format(timeFormat),
+          ).reverse()
+        : Array.from({length: 12}, (_, i) =>
+            moment().subtract(i, "months").format(timeFormat),
+          ).reverse();
+
+      const visitorDataMap = initializeDataMap(dataKeys, {
+        websiteVisits: 0,
+        bookedCounts: 0,
+        checkoutCounts: 0,
+        placeOrderCounts: 0,
+        orderConfirmCounts: 0,
+        orderPreparingCounts: 0,
+        orderDeliveredCounts: 0,
+      });
+
+      visitorResponse.forEach((item) => {
+        const dateKey = moment(item.created_at).format(timeFormat);
+        if (visitorDataMap[dateKey]) {
+          processVisitorData(visitorDataMap[dateKey], item);
         }
+      });
 
-        // Total Revenue Statistics ✅
-        const totalAmount = orderResponse.currentData
-          .filter((order) => order.is_delivered)
-          .reduce((accumulator, order) => {
-            return accumulator + order.grand_amount;
-          }, 0);
-        setOrderTotalAmount(totalAmount);
+      const chartData = dataKeys.map((key) => ({
+        label: key,
+        websiteVisits: visitorDataMap[key].websiteVisits,
+        bookedCounts: visitorDataMap[key].bookedCounts,
+        checkoutCounts: visitorDataMap[key].checkoutCounts,
+        placeOrderCounts: visitorDataMap[key].placeOrderCounts,
+        orderConfirmCounts: visitorDataMap[key].orderConfirmCounts,
+        orderPreparingCounts: visitorDataMap[key].orderPreparingCounts,
+        orderDeliveredCounts: visitorDataMap[key].orderDeliveredCounts,
+      }));
 
-        const previousTotalAmount = orderResponse.previousData
-          .filter((order) => order.is_delivered)
-          .reduce((accumulator, order) => {
-            return accumulator + order.grand_amount;
-          }, 0);
-        const orderTotalAmountChange = calculatePercentageChange(
-          totalAmount,
-          previousTotalAmount,
-        );
-        setOrderTotalAmountChange(orderTotalAmountChange);
+      setChartData({
+        website_visit: chartData.map((data) => data.websiteVisits),
+        checkout_count: chartData.map((data) => data.checkoutCounts),
+        booked_count: chartData.map((data) => data.bookedCounts),
+        place_order_count: chartData.map((data) => data.placeOrderCounts),
+        order_confirm_count: chartData.map((data) => data.orderConfirmCounts),
+        order_preparing_count: chartData.map((data) => data.orderPreparingCounts),
+        order_delivered_count: chartData.map((data) => data.orderDeliveredCounts),
+        labels: dataKeys,
+      });
 
-        // Peak Ordering Hour Statistics ✅
-        const orderHoursMap = {};
+      // User Chart Statistics ✅
+      const userChartDataMap = initializeDataMap(dataKeys, {
+        totalUsers: 0,
+        newUsers: 0,
+        returningUsers: 0,
+      });
 
-        orderResponse.currentData.forEach((order) => {
-          const hour = moment(order.created_at).hour();
-          orderHoursMap[hour] = (orderHoursMap[hour] || 0) + 1;
-        });
+      const deviceTokenCountMap = new Map();
 
-        const peakHour = Object.keys(orderHoursMap).reduce(
-          (a, b) => (orderHoursMap[a] > orderHoursMap[b] ? a : b),
-          0,
-        );
-
-        const lastPeakHour = Object.keys(orderHoursMap).reduce(
-          (a, b) => (orderHoursMap[a] < orderHoursMap[b] ? a : b),
-          0,
-        );
-
-        const peakHourFormatted = moment(peakHour, "HH").format("h A");
-        const lastPeakHourFormatted = moment(lastPeakHour, "HH").format("h A");
-
-        const peakHourEnd = (parseInt(peakHour) + 1) % 24;
-        const peakHourEndFormatted = moment(peakHourEnd, "HH").format("h A");
-        const peakOrderingHourRange = `${peakHourFormatted} to ${peakHourEndFormatted}`;
-
-        const lastPeakHourEnd = (parseInt(lastPeakHour) + 1) % 24;
-        const lastPeakHourEndFormatted = moment(lastPeakHourEnd, "HH").format("h A");
-        const lastPeakOrderingHourRange = `${lastPeakHourFormatted} to ${lastPeakHourEndFormatted}`;
-
-        setPeakOrderingHour(peakOrderingHourRange);
-        setLastPeakOrderingHour(lastPeakOrderingHourRange);
-
-        // Total Customers Statistics ✅
-        const uniqueCustomers = new Set(
-          userResponse.currentData.map((user) => user.deviceToken),
-        );
-        const previousUniqueCustomers = new Set(
-          userResponse.previousData.map((user) => user.deviceToken),
-        );
-        const totalCustomersChange = calculatePercentageChange(
-          uniqueCustomers.size,
-          previousUniqueCustomers.size,
-        );
-        setTotalCustomers(uniqueCustomers.size);
-        setTotalCustomersChange(totalCustomersChange);
-
-        // New Customers and Returning Statistics ✅
-        const {newUsers, returningUsers} = calculateNewAndReturningUsers(
-          userResponse.currentData,
-        );
-        const {newUsers: previousNewUsers, returningUsers: previousReturningUsers} =
-          calculateNewAndReturningUsers(userResponse.previousData);
-
-        setNewUsersCount(newUsers);
-        setReturningUsersCount(returningUsers);
-
-        const newUsersChange = calculatePercentageChange(newUsers, previousNewUsers);
-        const returningUsersChange = calculatePercentageChange(
-          returningUsers,
-          previousReturningUsers,
-        );
-
-        setNewUsersChange(newUsersChange);
-        setReturningUsersChange(returningUsersChange);
-
-        // Active Customers Statistics
-        const activeUsersCount = userResponse.currentData.filter(
-          (user) => user.is_active,
-        ).length;
-        const previousActiveUsersCount = userResponse.previousData.filter(
-          (user) => user.is_active,
-        ).length;
-
-        setActiveUsersCount(activeUsersCount);
-
-        const activeUsersChange = calculatePercentageChange(
-          activeUsersCount,
-          previousActiveUsersCount,
-        );
-
-        setActiveUsersChange(activeUsersChange);
-
-        // Visitor Chart Statistics ✅
-        const initializeDataMap = (keys, defaultValue) =>
-          keys.reduce((acc, key) => {
-            acc[key] = {...defaultValue};
-            return acc;
-          }, {});
-
-        const processVisitorData = (dataMap, item) => {
-          const {
-            website_visit,
-            booked_count,
-            checkout_count,
-            place_order_count,
-            order_confirm_count,
-            order_preparing_count,
-            order_delivered_count,
-          } = item;
-
-          dataMap.websiteVisits += website_visit;
-          dataMap.bookedCounts += booked_count;
-          dataMap.checkoutCounts += checkout_count;
-          dataMap.placeOrderCounts += place_order_count;
-          dataMap.orderConfirmCounts += order_confirm_count;
-          dataMap.orderPreparingCounts += order_preparing_count;
-          dataMap.orderDeliveredCounts += order_delivered_count;
-        };
-
-        const isWeekly = activeChartTab === "week";
-        const timeFormat = isWeekly ? "ddd" : "MMM";
-
-        const dataKeys = isWeekly
-          ? Array.from({length: 7}, (_, i) =>
-              moment().subtract(i, "days").format(timeFormat),
-            ).reverse()
-          : Array.from({length: 12}, (_, i) =>
-              moment().subtract(i, "months").format(timeFormat),
-            ).reverse();
-
-        const visitorDataMap = initializeDataMap(dataKeys, {
-          websiteVisits: 0,
-          bookedCounts: 0,
-          checkoutCounts: 0,
-          placeOrderCounts: 0,
-          orderConfirmCounts: 0,
-          orderPreparingCounts: 0,
-          orderDeliveredCounts: 0,
-        });
-
-        visitorResponse.forEach((item) => {
-          const dateKey = moment(item.created_at).format(timeFormat);
-          if (visitorDataMap[dateKey]) {
-            processVisitorData(visitorDataMap[dateKey], item);
+      userChartResponse.forEach((item) => {
+        const dateKey = moment(item.created_at).format(timeFormat);
+        if (userChartDataMap[dateKey]) {
+          const token = item.deviceToken;
+          if (!deviceTokenCountMap.has(token)) {
+            deviceTokenCountMap.set(token, 0);
           }
-        });
+          deviceTokenCountMap.set(token, deviceTokenCountMap.get(token) + 1);
+        }
+      });
 
-        const chartData = dataKeys.map((key) => ({
-          label: key,
-          websiteVisits: visitorDataMap[key].websiteVisits,
-          bookedCounts: visitorDataMap[key].bookedCounts,
-          checkoutCounts: visitorDataMap[key].checkoutCounts,
-          placeOrderCounts: visitorDataMap[key].placeOrderCounts,
-          orderConfirmCounts: visitorDataMap[key].orderConfirmCounts,
-          orderPreparingCounts: visitorDataMap[key].orderPreparingCounts,
-          orderDeliveredCounts: visitorDataMap[key].orderDeliveredCounts,
-        }));
-
-        setChartData({
-          website_visit: chartData.map((data) => data.websiteVisits),
-          checkout_count: chartData.map((data) => data.checkoutCounts),
-          booked_count: chartData.map((data) => data.bookedCounts),
-          place_order_count: chartData.map((data) => data.placeOrderCounts),
-          order_confirm_count: chartData.map((data) => data.orderConfirmCounts),
-          order_preparing_count: chartData.map((data) => data.orderPreparingCounts),
-          order_delivered_count: chartData.map((data) => data.orderDeliveredCounts),
-          labels: dataKeys,
-        });
-
-        // User Chart Statistics ✅
-        const userChartDataMap = initializeDataMap(dataKeys, {
-          totalUsers: 0,
-          newUsers: 0,
-          returningUsers: 0,
-        });
-
-        const deviceTokenCountMap = new Map();
-
+      deviceTokenCountMap.forEach((count, token) => {
         userChartResponse.forEach((item) => {
-          const dateKey = moment(item.created_at).format(timeFormat);
-          if (userChartDataMap[dateKey]) {
-            const token = item.deviceToken;
-            if (!deviceTokenCountMap.has(token)) {
-              deviceTokenCountMap.set(token, 0);
-            }
-            deviceTokenCountMap.set(token, deviceTokenCountMap.get(token) + 1);
-          }
-        });
-
-        deviceTokenCountMap.forEach((count, token) => {
-          userChartResponse.forEach((item) => {
-            if (item.deviceToken === token) {
-              const dateKey = moment(item.created_at).format(timeFormat);
-              if (userChartDataMap[dateKey]) {
-                userChartDataMap[dateKey].totalUsers++;
-                if (count === 1) {
-                  userChartDataMap[dateKey].newUsers++;
-                } else {
-                  userChartDataMap[dateKey].returningUsers++;
-                }
+          if (item.deviceToken === token) {
+            const dateKey = moment(item.created_at).format(timeFormat);
+            if (userChartDataMap[dateKey]) {
+              userChartDataMap[dateKey].totalUsers++;
+              if (count === 1) {
+                userChartDataMap[dateKey].newUsers++;
+              } else {
+                userChartDataMap[dateKey].returningUsers++;
               }
             }
-          });
-        });
-
-        // Prepare user chart data
-        const userChartData = dataKeys.map((key) => ({
-          label: key,
-          totalUsers: userChartDataMap[key].totalUsers,
-          newUsers: userChartDataMap[key].newUsers,
-          returningUsers: userChartDataMap[key].returningUsers,
-        }));
-
-        // Set the chart data state
-        setUserChartData({
-          labels: dataKeys,
-          totalUsersCount: userChartData.map((data) => data.totalUsers),
-          newUsersCount: userChartData.map((data) => data.newUsers),
-          returningUsersCount: userChartData.map((data) => data.returningUsers),
-        });
-
-        // Revenue Chart Statistics ✅
-        const revenueChartDataMap = initializeDataMap(dataKeys, {
-          totalRevenue: 0,
-        });
-
-        revenueChartResponse.forEach((item) => {
-          if (item.is_delivered) {
-            const dateKey = moment(item.created_at).format(timeFormat);
-            if (revenueChartDataMap[dateKey]) {
-              revenueChartDataMap[dateKey].totalRevenue += item.grand_amount;
-            }
           }
         });
+      });
 
-        const revenueChartData = dataKeys.map((key) => ({
-          label: key,
-          totalRevenue: revenueChartDataMap[key].totalRevenue.toFixed(2),
-        }));
+      // Prepare user chart data
+      const userChartData = dataKeys.map((key) => ({
+        label: key,
+        totalUsers: userChartDataMap[key].totalUsers,
+        newUsers: userChartDataMap[key].newUsers,
+        returningUsers: userChartDataMap[key].returningUsers,
+      }));
 
-        setRevenueChartData({
-          labels: dataKeys,
-          totalRevenue: revenueChartData.map((data) => data.totalRevenue),
+      // Set the chart data state
+      setUserChartData({
+        labels: dataKeys,
+        totalUsersCount: userChartData.map((data) => data.totalUsers),
+        newUsersCount: userChartData.map((data) => data.newUsers),
+        returningUsersCount: userChartData.map((data) => data.returningUsers),
+      });
+
+      // Revenue Chart Statistics ✅
+      const revenueChartDataMap = initializeDataMap(dataKeys, {
+        totalRevenue: 0,
+      });
+
+      revenueChartResponse.forEach((item) => {
+        if (item.is_delivered) {
+          const dateKey = moment(item.created_at).format(timeFormat);
+          if (revenueChartDataMap[dateKey]) {
+            revenueChartDataMap[dateKey].totalRevenue += item.grand_amount;
+          }
+        }
+      });
+
+      const revenueChartData = dataKeys.map((key) => ({
+        label: key,
+        totalRevenue: revenueChartDataMap[key].totalRevenue.toFixed(2),
+      }));
+
+      setRevenueChartData({
+        labels: dataKeys,
+        totalRevenue: revenueChartData.map((data) => data.totalRevenue),
+      });
+
+      // Calculate trending foods ✅
+      const foodCountMap = {};
+      revenueChartResponse.forEach((order) => {
+        const foodItems = order.fooditem_ids;
+        foodItems.forEach((food) => {
+          if (foodCountMap[food.food_name]) {
+            foodCountMap[food.food_name].count += food.quantity;
+          } else {
+            foodCountMap[food.food_name] = {
+              food_name: food.food_name,
+              food_image: food.image,
+              count: food.quantity,
+            };
+          }
         });
+      });
 
-        // Calculate trending foods ✅
-        const foodCountMap = {};
-        revenueChartResponse.forEach((order) => {
-          const foodItems = order.fooditem_ids;
-          foodItems.forEach((food) => {
-            if (foodCountMap[food.food_name]) {
-              foodCountMap[food.food_name].count += food.quantity;
-            } else {
-              foodCountMap[food.food_name] = {
-                food_name: food.food_name,
-                food_image: food.image,
-                count: food.quantity,
-              };
-            }
-          });
-        });
+      const trendingFoodsArray = Object.values(foodCountMap).sort(
+        (a, b) => b.count - a.count,
+      );
 
-        const trendingFoodsArray = Object.values(foodCountMap).sort(
-          (a, b) => b.count - a.count,
-        );
-
-        setTrendingFoods(trendingFoodsArray.slice(0, 5));
-      } catch (error) {
-        throw error;
-      }
-    };
-    fetchData();
-  }, [selectedTab, activeChartTab]);
+      setTrendingFoods(trendingFoodsArray.slice(0, 5));
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleTabChange = (value) => {
     setSelectedTab(value);
@@ -462,13 +480,21 @@ export function Home() {
     return {newUsers, returningUsers};
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex w-full justify-center items-center h-[78vh]">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
   return (
     <div className="mt-12">
       <Card className="border border-blue-gray-100 shadow-sm mb-5">
         <CardBody className="w-full flex justify-between lg:items-center items-start px-4 py-8 lg:flex-row flex-col gap-5">
           <div className="flex flex-col gap-2">
             <Typography variant="h4" className="font-semibold text-blue-gray-900">
-              Hello, Thek Restaurant 👋
+              Hello, {restaurantData?.restaurant_name} 👋
             </Typography>
             <Typography variant="h6" className="font-normal text-blue-gray-600">
               Let's check your stats!

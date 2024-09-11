@@ -1,8 +1,7 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
-
 export async function getAllWaiters(page, pageSize, status, searchQuery) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     let query = supabase
       .from("waiters")
@@ -31,7 +30,35 @@ export async function getAllWaiters(page, pageSize, status, searchQuery) {
   }
 }
 
+export async function getWaiterCounts() {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  try {
+    const {data, error} = await supabase
+      .from("waiters")
+      .select("status")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      throw error;
+    }
+
+    const total = data.length;
+    const available = data.filter((table) => table.status).length;
+    const unAvailable = total - available;
+
+    return {
+      total,
+      available,
+      unAvailable,
+    };
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    throw error;
+  }
+}
+
 export async function insertWaiter(value) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("waiters")

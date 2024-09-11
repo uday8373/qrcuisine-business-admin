@@ -62,7 +62,7 @@ export default function Ratings() {
   };
 
   useEffect(() => {
-    fetchRatingsData(); // Call the function
+    fetchRatingsData();
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
 
   const handleTabChange = (value) => {
@@ -91,7 +91,7 @@ export default function Ratings() {
     return stars;
   };
   return (
-    <div>
+    <div className="mt-8">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-5 flex  items-center justify-between gap-8">
@@ -111,7 +111,7 @@ export default function Ratings() {
                 {TABS.map(({label, value}) => (
                   <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
                     <div className="flex gap-1 p-1 items-center">
-                      {label} <StarIcon className="h-5 w-5" />
+                      {label} <StarIcon className="h-5 w-5 text-blue-gray-300" />
                     </div>
                   </Tab>
                 ))}
@@ -145,15 +145,15 @@ export default function Ratings() {
                   {TABLE_HEAD.map((head, index) => (
                     <th
                       key={head}
-                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors ">
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
                         {head}{" "}
-                        {index !== TABLE_HEAD.length - 1 && (
+                        {/* {index !== TABLE_HEAD.length - 1 && (
                           <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                        )}
+                        )} */}
                       </Typography>
                     </th>
                   ))}

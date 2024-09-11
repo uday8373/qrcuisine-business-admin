@@ -1,8 +1,7 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
-
 export async function getAllFoods(page, pageSize, status, searchQuery) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     let query = supabase
       .from("food_menus")
@@ -31,7 +30,35 @@ export async function getAllFoods(page, pageSize, status, searchQuery) {
   }
 }
 
+export async function getFoodCounts() {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  try {
+    const {data, error} = await supabase
+      .from("food_menus")
+      .select("is_available")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      throw error;
+    }
+
+    const total = data.length;
+    const available = data.filter((table) => table.is_available).length;
+    const unAvailable = total - available;
+
+    return {
+      total,
+      available,
+      unAvailable,
+    };
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    throw error;
+  }
+}
+
 export async function getCategories() {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("menu_category")
@@ -51,6 +78,7 @@ export async function getCategories() {
 }
 
 export async function insertFood(value) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {data, error} = await supabase
       .from("food_menus")

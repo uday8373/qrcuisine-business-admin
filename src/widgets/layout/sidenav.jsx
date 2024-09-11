@@ -27,7 +27,6 @@ export function Sidenav({routes}) {
   };
 
   const fetchBookedTablesCount = async () => {
-    console.log("callling booked tables");
     const result = await getTableCounts();
     if (result) {
       setBookedCount(result.bookedTables);
@@ -35,11 +34,13 @@ export function Sidenav({routes}) {
   };
 
   useEffect(() => {
+    const restaurantId = localStorage.getItem("restaurants_id");
+
     fetchOrdersCount();
-    const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
+    fetchBookedTablesCount();
 
     const orderSubscription = supabase
-      .channel("orders")
+      .channel("orders1")
       .on(
         "postgres_changes",
         {
@@ -54,17 +55,8 @@ export function Sidenav({routes}) {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(orderSubscription);
-    };
-  }, []);
-
-  useEffect(() => {
-    fetchBookedTablesCount();
-    const restaurantId = JSON.parse(localStorage.getItem("restaurants_id"));
-
     const tableSubscription = supabase
-      .channel("tables")
+      .channel("tables1")
       .on(
         "postgres_changes",
         {
@@ -74,12 +66,13 @@ export function Sidenav({routes}) {
           filter: `restaurant_id=eq.${restaurantId}`,
         },
         async (payload) => {
-          fetchBookedTablesCount;
+          fetchBookedTablesCount();
         },
       )
       .subscribe();
 
     return () => {
+      supabase.removeChannel(orderSubscription);
       supabase.removeChannel(tableSubscription);
     };
   }, []);
@@ -90,8 +83,8 @@ export function Sidenav({routes}) {
         openSidenav ? "translate-x-0" : "-translate-x-80"
       } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0 border border-blue-gray-100`}>
       <div className={`relative`}>
-        <Link to="/" className="my-10 px-8 flex justify-center">
-          <img src="/img/logo-long.svg" className="w-40" />
+        <Link to="/" className="my-10 px-8 flex ">
+          <img src="/logo-business.svg" className="w-40" />
         </Link>
         <IconButton
           variant="text"
@@ -170,8 +163,8 @@ export function Sidenav({routes}) {
 }
 
 Sidenav.defaultProps = {
-  brandImg: "/img/logo-long.svg",
-  brandName: "TableQR",
+  brandImg: "/logo-business.svg",
+  brandName: "QrCuisine",
 };
 
 Sidenav.propTypes = {

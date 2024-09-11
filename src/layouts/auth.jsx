@@ -8,7 +8,7 @@ export function Auth() {
   const navigation = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const isLooged = JSON.parse(localStorage.getItem("accessToken"));
+    const isLooged = (localStorage.getItem("accessToken"));
     if (isLooged) {
       navigation("/dashboard/home");
     }

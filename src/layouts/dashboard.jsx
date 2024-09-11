@@ -3,6 +3,9 @@ import {Sidenav, DashboardNavbar, Configurator, Footer} from "@/widgets/layout";
 import routes from "@/routes";
 import {useMaterialTailwindController} from "@/context";
 import {useEffect, useState} from "react";
+import supabase from "@/configs/supabase";
+import {toast, ToastContainer} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export function Dashboard() {
   const [controller] = useMaterialTailwindController();
@@ -11,24 +14,60 @@ export function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const isLooged = JSON.parse(localStorage.getItem("accessToken"));
+    const isLooged = localStorage.getItem("accessToken");
     if (!isLooged) {
       navigation("/auth/sign-in");
     }
     setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    const restaurantId = localStorage.getItem("restaurants_id");
+
+    const playNotificationSound = () => {
+      const audio = new Audio("/notification1.mp3");
+      audio.play();
+    };
+    const messageSubscriptionNew = supabase
+      .channel("messagesNew")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        async (payload) => {
+          if (payload.new.is_read === false) {
+            playNotificationSound();
+            setNotifications((prev) => {
+              const updatedNotifications = [...prev, payload.new];
+              return updatedNotifications;
+            });
+            toast.success(payload.new.message);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messageSubscriptionNew);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-blue-gray-50/50">
+    <div className="min-h-screen bg-blue-gray-50/50 relative">
+      <ToastContainer draggable stacked autoClose={false} style={{width: "500px"}} />
       <Sidenav
         routes={routes}
         brandImg={sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"}
       />
-      <div className="p-4 xl:ml-80">
+      <div className="p-4 xl:ml-80 min-h-screen flex flex-col">
         <DashboardNavbar />
         <Configurator />
         {isLoading ? (
-          <div className="flex justify-center w-full items-center h-screen">
+          <div className="flex justify-center w-full items-center min-h-screen relative">
             <div className="spinner-border text-primary" role="status">
               <span className="sr-only">Loading...</span>
             </div>
@@ -44,7 +83,7 @@ export function Dashboard() {
             )}
           </Routes>
         )}
-        <div className="text-blue-gray-600">
+        <div className="text-blue-gray-600 mt-auto py-3">
           <Footer />
         </div>
       </div>

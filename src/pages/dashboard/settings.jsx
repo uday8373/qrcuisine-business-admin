@@ -15,6 +15,7 @@ import {
   Input,
   Option,
   Select,
+  Spinner,
   Switch,
   Tab,
   Tabs,
@@ -67,6 +68,13 @@ const Settings = () => {
     setActiveTab(value);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center w-full justify-center h-[78vh]">
+        <Spinner />
+      </div>
+    );
+  }
   return (
     <div className="mt-8 mb-8 flex flex-col gap-8">
       <Tabs value={activeTab} onChange={handleTabChange} className="w-full lg:w-max">
