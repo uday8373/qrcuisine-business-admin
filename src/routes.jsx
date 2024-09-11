@@ -36,12 +36,12 @@ export const routes = [
         path: "/home",
         element: <Home />,
       },
-      {
-        icon: <RectangleGroupIcon {...icon} />,
-        name: "Table Grid",
-        path: "/table-grid",
-        element: <TableGrid />,
-      },
+      // {
+      //   icon: <RectangleGroupIcon {...icon} />,
+      //   name: "Table Grid",
+      //   path: "/table-grid",
+      //   element: <TableGrid />,
+      // },
       {
         icon: <UserCircleIcon {...icon} />,
         name: "profile",

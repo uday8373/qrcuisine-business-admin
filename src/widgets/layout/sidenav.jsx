@@ -27,7 +27,6 @@ export function Sidenav({routes}) {
   };
 
   const fetchBookedTablesCount = async () => {
-    console.log("callling booked tables");
     const result = await getTableCounts();
     if (result) {
       setBookedCount(result.bookedTables);
@@ -35,11 +34,13 @@ export function Sidenav({routes}) {
   };
 
   useEffect(() => {
+    const restaurantId = localStorage.getItem("restaurants_id");
+
     fetchOrdersCount();
-    const restaurantId = (localStorage.getItem("restaurants_id"));
+    fetchBookedTablesCount();
 
     const orderSubscription = supabase
-      .channel("orders")
+      .channel("orders1")
       .on(
         "postgres_changes",
         {
@@ -54,17 +55,8 @@ export function Sidenav({routes}) {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(orderSubscription);
-    };
-  }, []);
-
-  useEffect(() => {
-    fetchBookedTablesCount();
-    const restaurantId = (localStorage.getItem("restaurants_id"));
-
     const tableSubscription = supabase
-      .channel("tables")
+      .channel("tables1")
       .on(
         "postgres_changes",
         {
@@ -74,12 +66,13 @@ export function Sidenav({routes}) {
           filter: `restaurant_id=eq.${restaurantId}`,
         },
         async (payload) => {
-          fetchBookedTablesCount;
+          fetchBookedTablesCount();
         },
       )
       .subscribe();
 
     return () => {
+      supabase.removeChannel(orderSubscription);
       supabase.removeChannel(tableSubscription);
     };
   }, []);

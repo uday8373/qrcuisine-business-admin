@@ -1,9 +1,8 @@
 import supabase from "@/configs/supabase";
 
-const restaurantId = (localStorage.getItem("restaurants_id"));
-
 // Initialize real-time updates for messages
 export function subscribeToMessages(callback) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   const channel = supabase
     .channel(`messages:restaurant_id=eq.${restaurantId}`)
     .on(
@@ -23,6 +22,7 @@ export function subscribeToMessages(callback) {
   return channel;
 }
 export async function getMessageApis(searchQuery) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
@@ -60,6 +60,7 @@ export async function getMessageApis(searchQuery) {
 }
 
 export async function markMessagesAsRead(tableId) {
+  const restaurantId = localStorage.getItem("restaurants_id");
   try {
     const {error} = await supabase
       .from("messages")

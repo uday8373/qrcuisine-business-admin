@@ -3,6 +3,7 @@ import {
   deleteFood,
   getAllFoods,
   getCategories,
+  getFoodCounts,
   insertFood,
   updateFood,
 } from "@/apis/food-apis";
@@ -30,20 +31,6 @@ import {
 } from "@material-tailwind/react";
 import React, {useEffect, useState} from "react";
 
-const TABS = [
-  {
-    label: "All",
-    value: "all",
-  },
-  {
-    label: "Available",
-    value: "true",
-  },
-  {
-    label: "Unavailable",
-    value: "false",
-  },
-];
 const TABLE_HEAD = [
   "Title",
   "Category",
@@ -78,7 +65,23 @@ export function FoodItems() {
   const [errors, setErrors] = useState({});
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const isTesting = false;
+  const [tabs, setTabs] = useState([
+    {
+      label: "All",
+      value: "all",
+      count: 0,
+    },
+    {
+      label: "Available",
+      value: "true",
+      count: 0,
+    },
+    {
+      label: "Unavailable",
+      value: "false",
+      count: 0,
+    },
+  ]);
 
   const resetFormData = () => {
     setFormData({
@@ -109,14 +112,21 @@ export function FoodItems() {
     }
   };
 
-  useEffect(() => {
-    if (isTesting) {
-      setFoodData([]);
-      setLoading(false);
-    } else {
-      fetchFoodData();
-      fetchCategoryData();
+  const fetchCount = async () => {
+    const result = await getFoodCounts();
+    if (result) {
+      setTabs([
+        {label: "All", value: "all", count: result.total},
+        {label: "Available", value: "true", count: result.available},
+        {label: "Unavailable", value: "false", count: result.unAvailable},
+      ]);
     }
+  };
+
+  useEffect(() => {
+    fetchFoodData();
+    fetchCategoryData();
+    fetchCount();
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
   const totalPages = Math.ceil(maxItems / maxRow);
 
@@ -194,6 +204,7 @@ export function FoodItems() {
       setFormLoading(false);
       toogleAddModal();
       fetchFoodData();
+      fetchCount();
     }
   };
 
@@ -230,6 +241,7 @@ export function FoodItems() {
       setFormLoading(false);
       toggleUpdateModal();
       fetchFoodData();
+      fetchCount();
     }
   };
 
@@ -255,6 +267,7 @@ export function FoodItems() {
       setFormLoading(false);
       toggleDeleteModal();
       fetchFoodData();
+      fetchCount();
     }
   };
 
@@ -283,9 +296,16 @@ export function FoodItems() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <Tabs value="all" className="w-full md:w-max">
               <TabsHeader>
-                {TABS.map(({label, value}) => (
-                  <Tab key={value} value={value} onClick={() => handleTabChange(value)}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                {tabs.map(({label, value, count}) => (
+                  <Tab
+                    className="flex whitespace-nowrap"
+                    key={value}
+                    value={value}
+                    onClick={() => handleTabChange(value)}>
+                    <div className="flex items-center gap-2">
+                      {label}
+                      <Chip variant="ghost" value={count} size="sm" />
+                    </div>
                   </Tab>
                 ))}
               </TabsHeader>
@@ -305,6 +325,16 @@ export function FoodItems() {
               />
             </div>
           </div>
+          <div className="mt-5 flex gap-4">
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-green-500 rounded-md" />
+              Available
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <div className="w-5 h-5 bg-gray-700 rounded-md" />
+              Unavailable
+            </div>
+          </div>
         </CardHeader>
         <CardBody className="overflow-scroll px-0">
           {loading ? (
@@ -318,22 +348,22 @@ export function FoodItems() {
                   {TABLE_HEAD.map((head, index) => (
                     <th
                       key={head}
-                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors">
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
                         {head}{" "}
-                        {index !== TABLE_HEAD.length - 1 && (
+                        {/* {index !== TABLE_HEAD.length - 1 && (
                           <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                        )}
+                        )} */}
                       </Typography>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody
-                className={`${foodData.length === 0 && "h-[300px]"} relative w-full`}>
+                className={`${foodData.length === 0 && "h-[350px]"} relative w-full`}>
                 {foodData.length === 0 ? (
                   <div className="w-full absolute flex justify-center items-center h-full">
                     <Typography variant="h6" color="blue-gray" className="font-normal">
@@ -361,8 +391,16 @@ export function FoodItems() {
 
                       return (
                         <tr key={index}>
-                          <td className={classes}>
-                            <div className="flex items-center gap-3">
+                          <td
+                            className={`${classes} ${
+                              is_available ? "bg-green-500" : "bg-gray-700"
+                            } bg-opacity-20 relative`}>
+                            <div
+                              className={`w-2 h-full top-0 absolute left-0  ${
+                                is_available ? "bg-green-500" : "bg-gray-700"
+                              }`}
+                            />
+                            <div className="flex items-center gap-3 ml-2">
                               <div className="flex items-center gap-3 relative w-fit">
                                 {is_available && (
                                   <div className="absolute -top-1 -right-1 z-20">
@@ -430,7 +468,7 @@ export function FoodItems() {
                                 variant="ghost"
                                 size="sm"
                                 value={isSpecial ? "Special" : "None"}
-                                color={isSpecial ? "red" : "blue-gray"}
+                                color={isSpecial ? "blue" : "blue-gray"}
                                 className="w-24 justify-center"
                               />
                             </div>

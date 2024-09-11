@@ -4,6 +4,7 @@ import {
   getStatuses,
   getWaiters,
   updateOrder,
+  updateStatusOrder,
 } from "@/apis/order-apis";
 import {ViewOrderDrawer} from "@/components/order-modal/view-order";
 import supabase from "@/configs/supabase";
@@ -117,7 +118,7 @@ export function Orders() {
     fetchOrderData();
     fetchWaitersData();
     fetchStatusesData();
-    const restaurantId = (localStorage.getItem("restaurants_id"));
+    const restaurantId = localStorage.getItem("restaurants_id");
     const orderSubscription = supabase
       .channel("orders")
       .on(
@@ -160,8 +161,17 @@ export function Orders() {
       });
     } catch (error) {
       console.error("Failed to update order:", error);
-    } finally {
-      fetchOrderData();
+    }
+  };
+
+  const handleStatusUpdateOrder = async (orderId, updates) => {
+    try {
+      await updateStatusOrder({
+        id: orderId,
+        ...updates,
+      });
+    } catch (error) {
+      console.error("Failed to update order:", error);
     }
   };
 
@@ -174,8 +184,13 @@ export function Orders() {
     handleUpdateOrder(orderId, {preparation_time: mainTime});
   };
 
-  const handleStatusChange = (orderId, statusId, sorting) => {
-    handleUpdateOrder(orderId, {status_id: statusId, sorting: sorting});
+  const handleStatusChange = (orderId, statusId, sorting, table_id, user_id) => {
+    handleStatusUpdateOrder(orderId, {
+      status_id: statusId,
+      sorting: sorting,
+      table_id: table_id,
+      user_id: user_id,
+    });
   };
 
   const toggleDrawer = () => {
@@ -296,15 +311,15 @@ export function Orders() {
                   {TABLE_HEAD.map((head, index) => (
                     <th
                       key={head}
-                      className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">
+                      className=" border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors">
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
                         {head}{" "}
-                        {index !== TABLE_HEAD.length - 1 && (
+                        {/* {index !== TABLE_HEAD.length - 1 && (
                           <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                        )}
+                        )} */}
                       </Typography>
                     </th>
                   ))}
@@ -353,7 +368,7 @@ export function Orders() {
                                 : status_id?.sorting === 3
                                 ? "bg-orange-500"
                                 : "bg-gray-500"
-                            } bg-opacity-25 relative`}>
+                            } bg-opacity-20 relative`}>
                             <div
                               className={`w-2 h-full top-0 absolute left-0  ${
                                 status_id?.sorting === 1
@@ -365,7 +380,7 @@ export function Orders() {
                                   : "bg-gray-500"
                               }`}
                             />
-                            <div className="flex items-center gap-3 justify-end">
+                            <div className="flex items-center gap-3 justify-end ml-2">
                               <div className="flex items-center gap-3 relative w-fit">
                                 {!is_delivered && (
                                   <div className="absolute -top-1 -right-1 z-20">
@@ -485,7 +500,7 @@ export function Orders() {
                               <Typography
                                 variant="small"
                                 color="blue-gray"
-                                className="font-normal opacity-70">
+                                className="font-medium">
                                 ₹ {grand_amount.toFixed(2)}
                               </Typography>
                             </div>
@@ -615,6 +630,8 @@ export function Orders() {
                                               id,
                                               status.id,
                                               status_id.sorting,
+                                              table_id.id,
+                                              user_id.id,
                                             )
                                           }>
                                           {status.title}
@@ -625,7 +642,7 @@ export function Orders() {
                             </Menu>
                           </td>
 
-                          <td className={classes}>
+                          <td className={`${classes}`}>
                             <Tooltip content="View Order">
                               <IconButton
                                 onClick={() =>
