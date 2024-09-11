@@ -5,7 +5,6 @@ import {
   Card,
   CardBody,
   Chip,
-  IconButton,
   Input,
   List,
   ListItem,
@@ -20,6 +19,7 @@ import {
   subscribeToMessages,
 } from "@/apis/messages-api";
 import MessageList from "@/components/message-table/MessageList";
+import moment from "moment";
 
 function timeAgo(createdDate) {
   const now = new Date();
@@ -73,17 +73,15 @@ export default function Messages() {
 
         setMessageCountByTable(countByTable);
       }
-
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching message data:", error);
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     if (activeTable) {
-      console.log(`Filtering messages for table ${activeTable}`);
       const filtered = messageData.filter(
         (message) => message.tables?.table_no === activeTable,
       );
@@ -112,8 +110,12 @@ export default function Messages() {
       const tableId = filtered[0].tables?.id;
 
       if (tableId) {
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
         try {
+          await delay(5000); // 2000 milliseconds = 20 seconds
           await markMessagesAsRead(tableId);
+
           const updatedMessageCountByTable = {...messageCountByTable};
           updatedMessageCountByTable[tableNo] = 0; // Reset count for the table
           setMessageCountByTable(updatedMessageCountByTable);
@@ -139,20 +141,18 @@ export default function Messages() {
       }
       return acc;
     }, new Map()),
-  ).sort((a, b) => new Date(b[1].created_at) - new Date(a[1].created_at)); // Sort by the latest message
+  ).sort((a, b) => new Date(b[1].created_at) - new Date(a[1].created_at));
 
   useEffect(() => {
     fetchMessageData();
     const subscription = subscribeToMessages((eventType, payload) => {
       if (eventType === "INSERT") {
-        console.log("New message inserted:", payload);
         setMessageData((prevMessages) => {
           const updatedMessages = [
             ...prevMessages,
             {...payload, timeAgo: timeAgo(payload.created_at)},
           ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-          // Check if the new message belongs to the active table
           if (payload.tables?.table_no === activeTable) {
             setFilteredMessages(
               updatedMessages.filter((msg) => msg.tables?.table_no === activeTable),
@@ -165,19 +165,20 @@ export default function Messages() {
     });
 
     return () => {
-      console.log("Unsubscribing from message updates...");
       subscription.unsubscribe();
     };
-  }, [searchQuery, activeTable]);
+  }, [searchQuery, activeTable, messageData]);
 
-  useEffect(() => {
-    console.log("Message data updated:", messageData);
-    console.log("Filtered messages updated:", filteredMessages);
-    console.log("Filtered latestMessagesByTable updated:", latestMessagesByTable);
-  }, [messageData, filteredMessages, latestMessagesByTable]);
+  if (loading) {
+    return (
+      <div className="flex w-full h-[500px] justify-center items-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="mt-6">
       <Card className="h-full w-full">
         <CardBody className="overflow-hidden grid grid-cols-1 md:grid-cols-3 px-5">
           <div className="w-full border-r border-gray-400 pr-5">
@@ -212,21 +213,20 @@ export default function Messages() {
                         }`}>
                         <ListItemPrefix className="w-16">
                           <Badge
-                            placement="bottom-end"
+                            placement="top-end"
                             overlap="circular"
                             content={messageCountByTable[tableNo] || 0}
                             color="green"
-                            className={`font-normal w-2 h-2 flex items-center justify-center ${
+                            className={`font-bold w-2 h-2 flex items-center justify-center ${
                               messageCountByTable[tableNo]
                                 ? ""
                                 : " bg-[#4caf50] text-[#4caf50]"
-                            }`}
-                            withBorder>
-                            <IconButton color="amber" size="lg" className="rounded-full">
-                              <Typography variant="h6" color="white">
-                                {tableNo}
-                              </Typography>
-                            </IconButton>
+                            }`}>
+                            <Chip
+                              value={tableNo}
+                              variant="ghost"
+                              className="w-12 h-12 flex justify-center items-center text-xl"
+                            />
                           </Badge>
                         </ListItemPrefix>
                         <div className="w-full">
@@ -238,7 +238,7 @@ export default function Messages() {
                               variant="small"
                               color="blue-gray"
                               className="font-normal !line-clamp-1">
-                              {msg.timeAgo}
+                              {moment(messageData.created_at).fromNow()}
                             </Typography>
                           </div>
                           <Typography
@@ -255,7 +255,7 @@ export default function Messages() {
               ) : (
                 <div
                   className={`w-full ${
-                    latestMessagesByTable?.length === 0 && " h-96 "
+                    latestMessagesByTable?.length === 0 && "h-96"
                   } flex justify-center items-center  `}>
                   <Typography variant="h6" color="blue-gray" className="font-normal">
                     No Messages Found
@@ -272,24 +272,28 @@ export default function Messages() {
               <>
                 <div className="w-full flex justify-between items-center py-5 ">
                   <div className="flex gap-3 items-center">
-                    <Badge
-                      placement="bottom-end"
-                      overlap="circular"
-                      color="green"
-                      withBorder>
-                      <IconButton color="amber" size="lg" className="rounded-full ">
-                        <Typography variant="h6" color="white">
-                          {filteredMessages[0]?.tables?.table_no}
-                        </Typography>
-                      </IconButton>
-                    </Badge>
-                    <div>
+                    <div className="relative">
+                      <Chip
+                        value={filteredMessages[0]?.tables?.table_no}
+                        className="h-12 w-12 flex justify-center items-center text-lg"
+                        variant="ghost"
+                      />
+                      <div className="absolute -top-1 -right-1 z-20">
+                        <span class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pl-3">
                       <Typography variant="h6" color="gray">
                         Table No:{" "}
                         {filteredMessages[0]?.tables?.table_no || "Unknown Table No"}
                       </Typography>
                       <Chip
-                        color={filteredMessages[0]?.tables?.is_booked ? "amber" : "green"}
+                        className="flex justify-center"
+                        variant="ghost"
+                        color={filteredMessages[0]?.tables?.is_booked ? "green" : "gray"}
                         value={
                           filteredMessages[0]?.tables?.is_booked ? "Booked" : "Available"
                         }

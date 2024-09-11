@@ -6,6 +6,8 @@ import {useEffect, useState} from "react";
 import supabase from "@/configs/supabase";
 import {toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {Typography} from "@material-tailwind/react";
+import moment from "moment";
 
 export function Dashboard() {
   const [controller] = useMaterialTailwindController();
@@ -25,9 +27,10 @@ export function Dashboard() {
     const restaurantId = localStorage.getItem("restaurants_id");
 
     const playNotificationSound = () => {
-      const audio = new Audio("/notification1.mp3");
+      const audio = new Audio("/notification2.mp3");
       audio.play();
     };
+
     const messageSubscriptionNew = supabase
       .channel("messagesNew")
       .on(
@@ -41,11 +44,26 @@ export function Dashboard() {
         async (payload) => {
           if (payload.new.is_read === false) {
             playNotificationSound();
-            setNotifications((prev) => {
-              const updatedNotifications = [...prev, payload.new];
-              return updatedNotifications;
-            });
-            toast.success(payload.new.message);
+
+            toast.success(
+              <div className="w-full flex flex-col select-none cursor-move">
+                <Typography variant="paragraph" className="font-medium" color="blue-gray">
+                  {payload.new.message}
+                </Typography>
+                <Typography
+                  variant="small"
+                  className="font-normal opacity-70 w-full relative"
+                  color="blue-gray">
+                  {payload.new.sub_message}{" "}
+                  <span className="absolute right-0">
+                    {moment(payload.new.created_at).fromNow(true)} ago
+                  </span>
+                </Typography>
+              </div>,
+              {
+                icon: <span>🔔</span>,
+              },
+            );
           }
         },
       )

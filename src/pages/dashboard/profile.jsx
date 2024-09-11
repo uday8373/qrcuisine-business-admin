@@ -71,7 +71,7 @@ export function Profile() {
   return (
     <>
       <div
-        className={`relative mt-8 h-72 w-full overflow-hidden rounded-xl bg-cover	bg-center`}>
+        className={`relative mt-6 h-72 w-full overflow-hidden rounded-xl bg-cover	bg-center`}>
         <div className="absolute inset-0 h-full w-full bg-black/25" />
         <img src={data?.background_image} className="rounded-xl" />
       </div>
@@ -102,7 +102,11 @@ export function Profile() {
                     <HomeIcon className="-mt-1 mr-2 inline-block h-5 w-5" />
                     App
                   </Tab>
-                  <Tab value="message">
+                  <Tab
+                    onClick={() => {
+                      navigate("/dashboard/messages");
+                    }}
+                    value="message">
                     <ChatBubbleLeftEllipsisIcon className="-mt-0.5 mr-2 inline-block h-5 w-5" />
                     Message
                   </Tab>

@@ -38,7 +38,8 @@ export async function getMessageApis(searchQuery) {
       )
       .eq("restaurant_id", restaurantId)
       .gte("created_at", todayString)
-      .lt("created_at", tomorrowString);
+      .lt("created_at", tomorrowString)
+      .limit(10);
 
     // Apply search query if provided
     if (searchQuery) {
@@ -66,13 +67,40 @@ export async function markMessagesAsRead(tableId) {
       .from("messages")
       .update({is_read: true})
       .eq("restaurant_id", restaurantId)
-      .eq("table_id", tableId); // Use table_id instead of table_no
+      .eq("table_id", tableId);
 
     if (error) {
       throw error;
     }
   } catch (error) {
     console.error("Error marking messages as read:", error);
+    throw error;
+  }
+}
+
+export async function getMessageCounts() {
+  const restaurantId = localStorage.getItem("restaurants_id");
+  try {
+    const {data, error} = await supabase
+      .from("messages")
+      .select("is_read")
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      throw error;
+    }
+
+    const total = data.length;
+    const available = data.filter((item) => item.is_read).length;
+    const unAvailable = total - available;
+
+    return {
+      total,
+      available,
+      unAvailable,
+    };
+  } catch (error) {
+    console.error("Error fetching table counts:", error);
     throw error;
   }
 }
