@@ -7,10 +7,12 @@ import {useEffect, useState} from "react";
 import {getOrdersCounts} from "@/apis/order-apis";
 import supabase from "@/configs/supabase";
 import {getTableCounts} from "@/apis/tables-apis";
+import {getMessageCounts} from "@/apis/messages-api";
 
 export function Sidenav({routes}) {
   const [newOrder, setNewOrder] = useState(0);
   const [bookedCount, setBookedCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [controller, dispatch] = useMaterialTailwindController();
   const {sidenavColor, sidenavType, openSidenav} = controller;
   const sidenavTypes = {
@@ -33,11 +35,19 @@ export function Sidenav({routes}) {
     }
   };
 
+  const fetchNotificationCount = async () => {
+    const result = await getMessageCounts();
+    if (result) {
+      setNotificationCount(result.unAvailable);
+    }
+  };
+
   useEffect(() => {
     const restaurantId = localStorage.getItem("restaurants_id");
 
     fetchOrdersCount();
     fetchBookedTablesCount();
+    fetchNotificationCount();
 
     const orderSubscription = supabase
       .channel("orders1")
@@ -71,9 +81,26 @@ export function Sidenav({routes}) {
       )
       .subscribe();
 
+    const notificationNewSubscription = supabase
+      .channel("notificationChannel")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        async (payload) => {
+          fetchNotificationCount();
+        },
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(orderSubscription);
       supabase.removeChannel(tableSubscription);
+      supabase.removeChannel(notificationNewSubscription);
     };
   }, []);
 
@@ -130,7 +157,9 @@ export function Sidenav({routes}) {
                           fullWidth>
                           {icon}
                           <Typography color="inherit" className="font-medium capitalize">
-                            {name !== "orders" && name !== "tables" ? (
+                            {name !== "orders" &&
+                            name !== "tables" &&
+                            name !== "messages" ? (
                               name
                             ) : (
                               <>
@@ -144,6 +173,13 @@ export function Sidenav({routes}) {
                                       variant="filled"
                                       color="green"
                                       value={bookedCount}
+                                    />
+                                  )}
+                                  {name === "messages" && notificationCount !== 0 && (
+                                    <Chip
+                                      variant="filled"
+                                      color="green"
+                                      value={notificationCount}
                                     />
                                   )}
                                 </div>

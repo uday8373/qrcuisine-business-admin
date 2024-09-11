@@ -93,8 +93,6 @@ export function Home() {
   const restaurantId = localStorage.getItem("restaurants_id");
 
   useEffect(() => {
-    console.log("RESTAURENT ID", restaurantId);
-
     if (restaurantId) {
       fetchData();
     }
@@ -489,7 +487,7 @@ export function Home() {
   }
 
   return (
-    <div className="mt-12">
+    <div className="mt-6">
       <Card className="border border-blue-gray-100 shadow-sm mb-5">
         <CardBody className="w-full flex justify-between lg:items-center items-start px-4 py-8 lg:flex-row flex-col gap-5">
           <div className="flex flex-col gap-2">
@@ -517,7 +515,7 @@ export function Home() {
           </div>
         </CardBody>
       </Card>
-      <div className="mb-8 grid gap-y-6 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid gap-y-6 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
         <StatisticsCard
           color="gray"
           value={`₹ ${orderTotalAmount.toFixed(2)}`}
@@ -671,21 +669,24 @@ export function Home() {
               </Typography>
             </div>
           </CardHeader>
-          <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-            <table className="w-full  table-auto">
+          <CardBody className="overflow-x-auto px-0 pt-0 pb-2 w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr>
-                  {["Food Name", "Sold Count"].map((el) => (
-                    <th
-                      key={el}
-                      className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                      <Typography
-                        variant="small"
-                        className="text-[11px] font-medium uppercase text-blue-gray-400">
-                        {el}
-                      </Typography>
-                    </th>
-                  ))}
+                  <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
+                    <Typography
+                      variant="small"
+                      className="text-[11px] font-medium uppercase text-blue-gray-400">
+                      Food Name
+                    </Typography>
+                  </th>
+                  <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
+                    <Typography
+                      variant="small"
+                      className="text-[11px] font-medium uppercase text-blue-gray-400 text-right">
+                      Sold Count
+                    </Typography>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -698,7 +699,7 @@ export function Home() {
                     }`;
 
                     return (
-                      <tr key={key}>
+                      <tr key={key} className="w-full">
                         <td className={className}>
                           <div className="flex items-center gap-4">
                             <Avatar src={food_image} alt={food_name} size="sm" />
@@ -711,10 +712,10 @@ export function Home() {
                           </div>
                         </td>
 
-                        <td className={className}>
+                        <td className={`${className}`}>
                           <Typography
                             variant="small"
-                            className="text-xs font-medium text-blue-gray-600 text-center">
+                            className="text-xs font-medium text-blue-gray-600 text-right">
                             {count}
                           </Typography>
                         </td>

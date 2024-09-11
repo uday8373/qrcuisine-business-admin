@@ -73,8 +73,6 @@ export function Category() {
       searchQuery,
     );
     if (categoryResult) {
-      console.log("result", categoryResult.count);
-
       setCategoryData(categoryResult.data);
       setMaxItems(categoryResult.count);
     }
@@ -174,7 +172,7 @@ export function Category() {
       newErrors.title = "Title is required";
     }
 
-    if (formData.status !== true && formData.status !== false) {
+    if (formData.status === "") {
       newErrors.status = "Status must be Available or Unavailable";
     }
 
@@ -209,7 +207,7 @@ export function Category() {
   };
 
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12 min-h-[100vh]">
+    <div className="mt-6 mb-8 flex flex-col gap-12 min-h-[100vh]">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-5 flex items-center justify-between gap-8">

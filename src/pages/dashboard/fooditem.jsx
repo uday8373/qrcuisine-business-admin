@@ -272,7 +272,7 @@ export function FoodItems() {
   };
 
   return (
-    <div className="mt-8 mb-8 flex flex-col gap-12">
+    <div className="mt-6 mb-8 flex flex-col gap-12">
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-8 flex items-center justify-between gap-8">

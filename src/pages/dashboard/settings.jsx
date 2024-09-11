@@ -187,7 +187,6 @@ const RestaurantInfo = ({data, fetchRestaurantData}) => {
   };
 
   const handleStatusChange = (value) => {
-    console.log("object", value);
     setFormData({
       ...formData,
       is_open: value,
