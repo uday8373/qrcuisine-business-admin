@@ -78,12 +78,12 @@ export const routes = [
         path: "/waiters",
         element: <WaiterTable />,
       },
-      {
-        icon: <InformationCircleIcon {...icon} />,
-        name: "messages",
-        path: "/messages",
-        element: <Messages />,
-      },
+      // {
+      //   icon: <InformationCircleIcon {...icon} />,
+      //   name: "messages",
+      //   path: "/messages",
+      //   element: <Messages />,
+      // },
       {
         icon: <StarIcon {...icon} />,
         name: "Ratings",
