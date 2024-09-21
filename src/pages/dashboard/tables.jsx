@@ -16,7 +16,6 @@ import {
   Avatar,
 } from "@material-tailwind/react";
 import {
-  ChevronUpDownIcon,
   CloudArrowDownIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
@@ -28,6 +27,7 @@ import {AddTableModal} from "@/components/table-modal/add-table";
 import jsPDF from "jspdf";
 import supabase from "@/configs/supabase";
 import {EndSession} from "@/components/table-modal/end-session";
+import {QRShowModal} from "@/components/qr-modal/qr-modal";
 
 const TABLE_HEAD = [
   "Table No",
@@ -74,8 +74,10 @@ export function Tables() {
     },
   ]);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openQrModal, setOpenQrModal] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [sessionLoading, setSessionLoading] = useState(false);
+  const [selectedQr, setSelectedQr] = useState("");
 
   const resetFormData = () => {
     setFormData({numberOfTable: "", table_no: ""});
@@ -262,9 +264,18 @@ export function Tables() {
     setOpenDeleteModal(!openDeleteModal);
   };
 
+  const toggleQRModal = () => {
+    setOpenQrModal(!openQrModal);
+  };
+
   const handleDelete = (value) => {
     setSelectedId(value);
     toggleDeleteModal();
+  };
+
+  const handleQrOpen = (value) => {
+    setSelectedQr(value);
+    toggleQRModal();
   };
 
   const handleCloseSession = async () => {
@@ -500,13 +511,19 @@ export function Tables() {
                           )}
                         </td>
                         <td className={className}>
-                          <Avatar
-                            src={`${table?.qr_image?.replace(
-                              "/upload/",
-                              "/upload/c_scale,w_100/",
-                            )}`}
-                            variant="rounded"
-                          />
+                          <div
+                            onClick={() => {
+                              handleQrOpen(table?.qr_image);
+                            }}
+                            className="cursor-pointer">
+                            <Avatar
+                              src={`${table?.qr_image?.replace(
+                                "/upload/",
+                                "/upload/c_scale,w_100/",
+                              )}`}
+                              variant="rounded"
+                            />
+                          </div>
                         </td>
                         <td className={`${className} w-28`}>
                           <div className="flex">
@@ -620,6 +637,12 @@ export function Tables() {
         handleOpen={toggleDeleteModal}
         handleSubmit={handleCloseSession}
         loading={sessionLoading}
+      />
+      <QRShowModal
+        open={openQrModal}
+        setOpen={setOpenQrModal}
+        handleOpen={toggleQRModal}
+        selectedQr={selectedQr}
       />
     </div>
   );
