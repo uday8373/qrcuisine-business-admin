@@ -16,7 +16,6 @@ import {
   Avatar,
 } from "@material-tailwind/react";
 import {
-  ChevronUpDownIcon,
   CloudArrowDownIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
