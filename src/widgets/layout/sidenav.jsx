@@ -109,6 +109,14 @@ export function Sidenav({routes}) {
       className={`${sidenavTypes[sidenavType]} ${
         openSidenav ? "translate-x-0" : "-translate-x-80"
       } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0 border border-blue-gray-100`}>
+      <div className="w-full flex justify-center absolute bottom-5">
+        <Typography
+          variant="small"
+          color={sidenavType === "dark" ? "white" : "blue-gray"}
+          className="font-semibold uppercase opacity-75 text-xs leading-loose">
+          V 1.0.P
+        </Typography>
+      </div>
       <div className={`relative`}>
         <Link to="/" className="my-10 px-8 flex ">
           <img src="/logo-business.svg" className="w-40" />

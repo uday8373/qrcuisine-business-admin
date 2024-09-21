@@ -2,9 +2,9 @@ import {Routes, Route, useNavigate} from "react-router-dom";
 import {Sidenav, DashboardNavbar, Configurator, Footer} from "@/widgets/layout";
 import routes from "@/routes";
 import {useMaterialTailwindController} from "@/context";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import supabase from "@/configs/supabase";
-import {toast, ToastContainer} from "react-toastify";
+import {Flip, toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {Typography} from "@material-tailwind/react";
 import moment from "moment";
@@ -14,6 +14,8 @@ export function Dashboard() {
   const {sidenavType} = controller;
   const navigation = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+
+  const toastIdRef = useRef([]);
 
   useEffect(() => {
     const isLooged = localStorage.getItem("accessToken");
@@ -26,7 +28,7 @@ export function Dashboard() {
   useEffect(() => {
     const restaurantId = localStorage.getItem("restaurants_id");
 
-    const playNotificationSound = () => {
+    const playNotificationSound = async () => {
       const audio = new Audio("/notification2.mp3");
       audio.play();
     };
@@ -43,9 +45,14 @@ export function Dashboard() {
         },
         async (payload) => {
           if (payload.new.is_read === false) {
-            playNotificationSound();
+            await playNotificationSound();
 
-            toast.success(
+            if (toastIdRef.current.length >= 3) {
+              const oldestToastId = toastIdRef.current.shift();
+              toast.dismiss(oldestToastId);
+            }
+
+            const newToastId = toast.success(
               <div className="w-full flex flex-col select-none cursor-move">
                 <Typography variant="paragraph" className="font-medium" color="blue-gray">
                   {payload.new.message}
@@ -64,6 +71,7 @@ export function Dashboard() {
                 icon: <span>🔔</span>,
               },
             );
+            toastIdRef.current.push(newToastId);
           }
         },
       )
@@ -76,7 +84,13 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50 relative">
-      <ToastContainer draggable stacked autoClose={false} style={{width: "500px"}} />
+      <ToastContainer
+        draggable
+        stacked
+        autoClose={false}
+        style={{width: "500px"}}
+        transition={Flip}
+      />
       <Sidenav
         routes={routes}
         brandImg={sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"}

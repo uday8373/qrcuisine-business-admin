@@ -411,7 +411,10 @@ export function FoodItems() {
                                   </div>
                                 )}
                                 <Avatar
-                                  src={image}
+                                  src={`${image?.replace(
+                                    "/upload/",
+                                    "/upload/c_scale,w_100/",
+                                  )}`}
                                   alt={food_name}
                                   size="sm"
                                   variant="rounded"
