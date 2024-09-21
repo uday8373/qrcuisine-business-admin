@@ -40,7 +40,7 @@ export async function endSession(tableId) {
   try {
     const {data, error} = await supabase
       .from("tables")
-      .update({is_booked: false, order_id: null, persons: null})
+      .update({is_booked: false, order_id: null, persons: null, user_id: null})
       .eq("id", tableId)
       .select();
 
