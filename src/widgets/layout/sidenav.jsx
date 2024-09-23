@@ -8,6 +8,7 @@ import {getOrdersCounts} from "@/apis/order-apis";
 import supabase from "@/configs/supabase";
 import {getTableCounts} from "@/apis/tables-apis";
 import {getMessageCounts} from "@/apis/messages-api";
+import {WEB_CONFIG} from "@/configs/website-config";
 
 export function Sidenav({routes}) {
   const [newOrder, setNewOrder] = useState(0);
@@ -114,7 +115,10 @@ export function Sidenav({routes}) {
           variant="small"
           color={sidenavType === "dark" ? "white" : "blue-gray"}
           className="font-semibold uppercase opacity-75 text-xs leading-loose">
-          V 1.0.P
+          V{" "}
+          {WEB_CONFIG.isProduction
+            ? WEB_CONFIG.productionVersion
+            : WEB_CONFIG.developementVersion}
         </Typography>
       </div>
       <div className={`relative`}>
