@@ -5,15 +5,27 @@ export async function getAllOrders(page, pageSize, status, searchQuery) {
   try {
     let query = supabase
       .from("orders")
-      .select(`*,table_id(*),waiter_id(*),status_id(*),user_id(*)`, {count: "exact"})
+      .select(`*,table_id(*),waiter_id(*),status_id(*),user_id(*),cancelled_reason(*)`, {
+        count: "exact",
+      })
       .eq("restaurant_id", restaurantId)
       .order("is_delivered", {ascending: true})
       .order("created_at", {ascending: false})
       .range((page - 1) * pageSize, page * pageSize - 1)
       .limit(pageSize);
 
-    if (status !== "all") {
-      query = query.eq("is_delivered", status === "true");
+    // Apply filters based on status
+    if (status === "active") {
+      query = query
+        .eq("is_delivered", false)
+        .eq("is_cancelled", false)
+        .eq("is_abandoned", false);
+    } else if (status === "delivered") {
+      query = query.eq("is_delivered", true);
+    } else if (status === "cancelled") {
+      query = query.eq("is_cancelled", true);
+    } else if (status === "abandoned") {
+      query = query.eq("is_abandoned", true);
     }
 
     if (searchQuery) {
@@ -37,7 +49,7 @@ export async function getOrdersCounts() {
   try {
     const {data, error} = await supabase
       .from("orders")
-      .select("is_delivered")
+      .select("is_delivered, is_cancelled, is_abandoned")
       .eq("restaurant_id", restaurantId);
 
     if (error) {
@@ -46,12 +58,20 @@ export async function getOrdersCounts() {
 
     const total = data.length;
     const available = data.filter((item) => item.is_delivered).length;
+    const active = data.filter(
+      (item) => !item.is_delivered && !item.is_cancelled && !item.is_abandoned,
+    ).length;
     const unAvailable = total - available;
+    const cancelled = data.filter((item) => item.is_cancelled).length;
+    const abandoned = data.filter((item) => item.is_abandoned).length;
 
     return {
       total,
       available,
       unAvailable,
+      active,
+      cancelled,
+      abandoned,
     };
   } catch (error) {
     console.error("Error fetching table counts:", error);
@@ -194,6 +214,66 @@ export async function updateStatusOrder(value) {
   }
 }
 
+export async function updateCancelStatusOrder({selectedReason, value}) {
+  const restaurantId = localStorage.getItem("restaurants_id");
+
+  try {
+    const updates = {
+      status_id: value.status_id,
+      is_cancelled: true,
+      cancelled_reason: selectedReason,
+    };
+
+    // Use Promise.all to handle both updates concurrently
+    const [orderUpdateResult, tableUpdateResult] = await Promise.all([
+      supabase.from("orders").update(updates).eq("id", value.id).select(),
+      supabase
+        .from("tables")
+        .update({is_booked: false, order_id: null, persons: null})
+        .eq("id", value.table_id)
+        .select(),
+    ]);
+
+    const {data: orderData, error: orderError} = orderUpdateResult;
+    const {data: tableData, error: tableError} = tableUpdateResult;
+
+    // Handle any errors from the update operations
+    if (orderError || tableError) {
+      throw orderError || tableError;
+    }
+
+    const message = "Order Cancelled!";
+    const subMessage = "Your order has been cancelled.";
+
+    // Insert message only if needed
+    if (message) {
+      const messageInsertResult = await supabase.from("messages").insert({
+        order_id: value.id,
+        message: message,
+        sub_message: subMessage,
+        table_id: value.table_id,
+        restaurant_id: restaurantId,
+        user_id: value.user_id,
+        waiter_id: null,
+        is_read: true,
+        user_read: false,
+      });
+
+      const {error: messageError} = messageInsertResult;
+
+      if (messageError) {
+        throw messageError;
+      }
+    }
+
+    // Return the order data
+    return orderData;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+}
+
 export async function getWaiters() {
   const restaurantId = localStorage.getItem("restaurants_id");
   try {
@@ -203,6 +283,25 @@ export async function getWaiters() {
       .eq("restaurant_id", restaurantId)
       .eq("status", true)
       .order("name", {ascending: true});
+
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
+export async function getCancelledReason() {
+  try {
+    const {data, error} = await supabase
+      .from("cancelled_reason")
+      .select(`*`)
+      .eq("is_admin", true)
+      .order("title", {ascending: true});
 
     if (error) {
       throw error;

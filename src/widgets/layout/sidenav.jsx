@@ -25,7 +25,7 @@ export function Sidenav({routes}) {
   const fetchOrdersCount = async () => {
     const result = await getOrdersCounts();
     if (result) {
-      setNewOrder(result.unAvailable);
+      setNewOrder(result.active);
     }
   };
 

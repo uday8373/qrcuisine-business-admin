@@ -2,6 +2,7 @@ import supabase from "@/configs/supabase";
 import QRCode from "qrcode";
 import {uploadImageToCloudinary} from "./cloudinary-upload";
 import html2canvas from "html2canvas";
+import {WEB_CONFIG} from "@/configs/website-config";
 
 export async function getAllTables(page, pageSize, status, searchQuery) {
   const restaurantId = localStorage.getItem("restaurants_id");
@@ -36,20 +37,36 @@ export async function getAllTables(page, pageSize, status, searchQuery) {
   }
 }
 
-export async function endSession(tableId) {
+export async function endSession(tableId, orderId) {
   try {
-    const {data, error} = await supabase
+    const tableUpdatePromise = supabase
       .from("tables")
       .update({is_booked: false, order_id: null, persons: null})
       .eq("id", tableId)
       .select();
 
-    if (error) {
-      throw error;
+    let orderUpdatePromise = Promise.resolve();
+    if (orderId) {
+      orderUpdatePromise = supabase
+        .from("orders")
+        .update({is_abandoned: true, status_id: "bb59ee8e-f74c-4d0a-a422-655a2bb1053e"})
+        .eq("id", orderId)
+        .select();
     }
-    if (data) {
-      return data;
+
+    const [tableResult, orderResult] = await Promise.all([
+      tableUpdatePromise,
+      orderUpdatePromise,
+    ]);
+
+    if (tableResult.error) {
+      throw tableResult.error;
     }
+    if (orderResult && orderResult.error) {
+      throw orderResult.error;
+    }
+
+    return tableResult.data;
   } catch (error) {
     throw error;
   }
@@ -276,7 +293,10 @@ async function generateQRTemplateImage(table_no, qr_code) {
 }
 
 async function generateQRCode(restaurantId, tableId) {
-  const url = `https://qrcuisine.com/${restaurantId}/${tableId}`;
+  const baseUrl = WEB_CONFIG.isProduction
+    ? WEB_CONFIG.productionBaseUrl
+    : WEB_CONFIG.developementBaseUrl;
+  const url = `${baseUrl}/${restaurantId}/${tableId}`;
   try {
     const qrCodeDataURL = await QRCode.toDataURL(url);
     return qrCodeDataURL;

@@ -84,13 +84,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50 relative">
-      <ToastContainer
-        draggable
-        stacked
-        autoClose={false}
-        style={{width: "500px"}}
-        transition={Flip}
-      />
+      <ToastContainer draggable stacked autoClose={false} style={{width: "500px"}} />
       <Sidenav
         routes={routes}
         brandImg={sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"}

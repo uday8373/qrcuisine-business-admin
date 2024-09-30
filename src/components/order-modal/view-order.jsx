@@ -80,6 +80,12 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
                 ? "green"
                 : selectedData?.status_id?.sorting === 3
                 ? "orange"
+                : selectedData?.status_id?.sorting === 4
+                ? "gray"
+                : selectedData?.status_id?.sorting === 5
+                ? "red"
+                : selectedData?.status_id?.sorting === 6
+                ? "brown"
                 : "gray"
             }
             value={selectedData?.status_id?.title}
@@ -100,6 +106,27 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
           />
         </div>
       </div>
+      {selectedData?.status_id?.sorting === 5 && (
+        <>
+          <hr className="my-5" />
+          <div className="flex flex-col gap-1 bg-red-500/10 p-3 rounded-lg">
+            <Typography variant="small" color="red" className="font-medium">
+              Cancelled Reason
+            </Typography>
+            <div className="flex flex-col">
+              <Typography variant="paragraph" color="blue-gray" className="font-medium">
+                {selectedData?.cancelled_reason?.title}
+              </Typography>
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="font-normal opacity-70">
+                {selectedData?.cancelled_reason?.description}
+              </Typography>
+            </div>
+          </div>
+        </>
+      )}
       <hr className="my-5" />
       <div className="flex flex-col gap-1">
         <Typography variant="small" color="blue-gray" className="font-normal opacity-70">

@@ -76,6 +76,7 @@ export function Tables() {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openQrModal, setOpenQrModal] = useState(false);
   const [selectedId, setSelectedId] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState("");
   const [sessionLoading, setSessionLoading] = useState(false);
   const [selectedQr, setSelectedQr] = useState("");
 
@@ -268,8 +269,9 @@ export function Tables() {
     setOpenQrModal(!openQrModal);
   };
 
-  const handleDelete = (value) => {
+  const handleDelete = (value, orderId) => {
     setSelectedId(value);
+    setSelectedOrderId(orderId);
     toggleDeleteModal();
   };
 
@@ -281,7 +283,7 @@ export function Tables() {
   const handleCloseSession = async () => {
     setSessionLoading(true);
     try {
-      await endSession(selectedId);
+      await endSession(selectedId, selectedOrderId);
     } catch (error) {
       throw error;
     } finally {
@@ -354,11 +356,11 @@ export function Tables() {
           </div>
           <div className="mt-5 flex gap-4">
             <div className="flex gap-2 items-center text-sm">
-              <div className="w-5 h-5 bg-green-500 rounded-md" />
+              <div className="w-4 h-4 bg-green-500 rounded-md" />
               Table Booked
             </div>
             <div className="flex gap-2 items-center text-sm">
-              <div className="w-5 h-5 bg-gray-700 rounded-md" />
+              <div className="w-4 h-4 bg-gray-500 rounded-md" />
               Table Available
             </div>
           </div>
@@ -408,12 +410,33 @@ export function Tables() {
                     return (
                       <tr key={index}>
                         <td
+                          className={`${className} bg-orange-400 relative w-28 border-r`}>
+                          <div className="flex items-center gap-3 justify-end">
+                            <div className="flex flex-col items-center relative w-full justify-center">
+                              <Typography
+                                variant="small"
+                                color="white"
+                                className="font-semibold uppercase text-xs">
+                                Table No
+                              </Typography>
+                              <Typography
+                                variant="h2"
+                                color="white"
+                                className="font-black text-[42px] tracking-wide">
+                                {table.table_no.toString().padStart(2, "0")}
+                              </Typography>
+                            </div>
+                          </div>
+                        </td>
+                        <td
                           className={`${className} ${
-                            table?.is_booked ? "bg-green-500" : "bg-gray-700"
-                          } bg-opacity-25`}>
+                            table?.is_booked
+                              ? "from-green-500/20 to-white"
+                              : "from-gray-500/20 to-white"
+                          } bg-gradient-to-r relative w-28`}>
                           <div
                             className={`w-2 h-full top-0 absolute left-0  ${
-                              table?.is_booked ? "bg-green-500" : "bg-gray-700"
+                              table?.is_booked ? "bg-green-500" : "bg-gray-500"
                             }`}
                           />
                           <div className="flex w-full justify-center">
@@ -428,21 +451,12 @@ export function Tables() {
                               )}
                               <Chip
                                 variant="ghost"
-                                color={table.is_booked ? "green" : "gray"}
-                                size="lg"
-                                value={table?.table_no}
-                                className="text-sm font-bold z-30"
+                                color={table?.is_booked ? "green" : "gray"}
+                                value={table?.is_booked ? "Booked" : "Available"}
+                                className="justify-center items-center w-24"
                               />
                             </div>
                           </div>
-                        </td>
-                        <td className={className}>
-                          <Chip
-                            variant="ghost"
-                            color={table?.is_booked ? "green" : "gray"}
-                            value={table?.is_booked ? "Booked" : "Available"}
-                            className="justify-center items-center w-24"
-                          />
                         </td>
                         <td className={className}>
                           <Typography
@@ -530,7 +544,7 @@ export function Tables() {
                             <Tooltip content="End Session">
                               <IconButton
                                 onClick={() => {
-                                  handleDelete(table?.id);
+                                  handleDelete(table?.id, table?.order_id?.id);
                                 }}
                                 variant="text">
                                 <TrashIcon className="h-5 w-5" />
