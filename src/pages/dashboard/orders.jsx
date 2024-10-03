@@ -6,6 +6,7 @@ import {
   getWaiters,
   updateCancelStatusOrder,
   updateOrder,
+  updatePaymentOrder,
   updateStatusOrder,
   updateWaiterOrder,
 } from "@/apis/order-apis";
@@ -47,6 +48,7 @@ const TABLE_HEAD = [
   "Waiter",
   "Preparation Time",
   "Status",
+  "Payment Status",
   "Action",
 ];
 
@@ -237,6 +239,16 @@ export function Orders() {
       console.error("Failed to update order:", error);
     }
   };
+  const handlePaymentUpdateOrder = async (orderId, updates) => {
+    try {
+      await updatePaymentOrder({
+        id: orderId,
+        ...updates,
+      });
+    } catch (error) {
+      console.error("Failed to update order:", error);
+    }
+  };
 
   const handleWaiterChange = (orderId, waiter_id, table_id, user_id, waiter_name) => {
     handleUpdateWaiterOrder(orderId, {
@@ -258,6 +270,11 @@ export function Orders() {
       sorting: sorting,
       table_id: table_id,
       user_id: user_id,
+    });
+  };
+  const handlePaymentChange = (orderId, is_paid) => {
+    handlePaymentUpdateOrder(orderId, {
+      is_paid: is_paid,
     });
   };
 
@@ -436,6 +453,7 @@ export function Orders() {
                           tax_amount,
                           total_amount,
                           cancelled_reason,
+                          is_paid,
                         },
                         index,
                       ) => {
@@ -820,6 +838,41 @@ export function Orders() {
                               </Menu>
                             </td>
 
+                            <td className={`${classes}`}>
+                              {is_paid ? (
+                                <Chip
+                                  variant="ghost"
+                                  size="md"
+                                  color={is_paid ? "green" : "red"}
+                                  value={is_paid ? "Paid" : "Unpaid"}
+                                  className="flex justify-center"
+                                />
+                              ) : (
+                                <Menu size="xs">
+                                  <MenuHandler>
+                                    <Chip
+                                      icon={<ChevronDownIcon size={20} />}
+                                      variant="ghost"
+                                      size="md"
+                                      color="red"
+                                      value="Unpaid"
+                                      className="flex justify-center cursor-pointer"
+                                    />
+                                  </MenuHandler>
+
+                                  <MenuList>
+                                    <MenuItem
+                                      onClick={() => {
+                                        handlePaymentChange(id, true);
+                                      }}
+                                      className="flex items-center justify-between gap-3"
+                                      key="true">
+                                      Paid
+                                    </MenuItem>
+                                  </MenuList>
+                                </Menu>
+                              )}
+                            </td>
                             <td className={`${classes}`}>
                               <Tooltip content="View Order">
                                 <IconButton

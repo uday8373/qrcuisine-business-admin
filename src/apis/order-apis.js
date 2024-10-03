@@ -109,6 +109,29 @@ export async function updateOrder(value) {
   }
 }
 
+export async function updatePaymentOrder(value) {
+  try {
+    const updates = {
+      is_paid: value.is_paid,
+    };
+
+    const {data, error} = await supabase
+      .from("orders")
+      .update(updates)
+      .eq("id", value.id)
+      .select();
+
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+}
+
 export async function updateWaiterOrder(value) {
   const restaurantId = localStorage.getItem("restaurants_id");
   try {
