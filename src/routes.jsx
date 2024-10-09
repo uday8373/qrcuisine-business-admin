@@ -9,7 +9,6 @@ import {
   CubeIcon,
   UserGroupIcon,
   Cog6ToothIcon,
-  RectangleGroupIcon,
   StarIcon,
 } from "@heroicons/react/24/solid";
 import {Home, Profile, Tables, Category} from "@/pages/dashboard";
@@ -21,6 +20,7 @@ import Settings from "./pages/dashboard/settings";
 import TableGrid from "./pages/dashboard/table-grid";
 import Ratings from "./pages/dashboard/ratings";
 import Messages from "./pages/dashboard/messages";
+import ActivityTable from "./pages/dashboard/activity-table";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -77,6 +77,12 @@ export const routes = [
         name: "waiters",
         path: "/waiters",
         element: <WaiterTable />,
+      },
+      {
+        icon: <InformationCircleIcon {...icon} />,
+        name: "Table Activity",
+        path: "/table-activity",
+        element: <ActivityTable />,
       },
       // {
       //   icon: <InformationCircleIcon {...icon} />,

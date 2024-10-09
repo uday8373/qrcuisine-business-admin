@@ -13,11 +13,7 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import {MagnifyingGlassIcon} from "@heroicons/react/24/solid";
-import {
-  getMessageApis,
-  markMessagesAsRead,
-  subscribeToMessages,
-} from "@/apis/messages-api";
+import {getMessageApis, markMessagesAsRead} from "@/apis/messages-api"; // Removed subscribeToMessages
 import MessageList from "@/components/message-table/MessageList";
 import moment from "moment";
 
@@ -93,7 +89,6 @@ export default function Messages() {
     }
   }, [messageData, activeTable]);
 
-  // Handle table click and filter messages by table_no
   const handleTableClick = async (tableNo) => {
     setActiveTable(tableNo);
 
@@ -105,7 +100,6 @@ export default function Messages() {
       filtered.sort((b, a) => new Date(b.created_at) - new Date(a.created_at)),
     );
 
-    // Mark messages as read for the specific table
     if (filtered.length > 0) {
       const tableId = filtered[0].tables?.id;
 
@@ -113,7 +107,7 @@ export default function Messages() {
         const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
         try {
-          await delay(5000); // 2000 milliseconds = 20 seconds
+          await delay(5000); // 5000 milliseconds = 5 seconds
           await markMessagesAsRead(tableId);
 
           const updatedMessageCountByTable = {...messageCountByTable};
@@ -125,13 +119,11 @@ export default function Messages() {
       }
     }
   };
-  // Select the most recent message for each table
 
   const latestMessagesByTable = Array.from(
     messageData.reduce((acc, msg) => {
       const tableNo = msg.tables?.table_no;
       if (tableNo) {
-        // If the table_no is already in the map, check if this message is newer
         if (
           !acc.has(tableNo) ||
           new Date(msg.created_at) > new Date(acc.get(tableNo).created_at)
@@ -145,29 +137,7 @@ export default function Messages() {
 
   useEffect(() => {
     fetchMessageData();
-    const subscription = subscribeToMessages((eventType, payload) => {
-      if (eventType === "INSERT") {
-        setMessageData((prevMessages) => {
-          const updatedMessages = [
-            ...prevMessages,
-            {...payload, timeAgo: timeAgo(payload.created_at)},
-          ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-          if (payload.tables?.table_no === activeTable) {
-            setFilteredMessages(
-              updatedMessages.filter((msg) => msg.tables?.table_no === activeTable),
-            );
-          }
-
-          return updatedMessages;
-        });
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [searchQuery, activeTable, messageData]);
+  }, [searchQuery]);
 
   if (loading) {
     return (
@@ -204,7 +174,7 @@ export default function Messages() {
                 </div>
               ) : latestMessagesByTable.length > 0 ? (
                 <List className="px-0 w-full h-96 overflow-y-auto pr-2">
-                  {latestMessagesByTable.map(([tableNo, msg], index) => (
+                  {latestMessagesByTable?.map(([tableNo, msg], index) => (
                     <div className="w-full min-h-96" key={tableNo || index}>
                       <ListItem
                         onClick={() => handleTableClick(tableNo)}

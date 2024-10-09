@@ -4,7 +4,7 @@ import supabase from "@/configs/supabase";
 export function subscribeToMessages(callback) {
   const restaurantId = localStorage.getItem("restaurants_id");
   const channel = supabase
-    .channel(`messages:restaurant_id=eq.${restaurantId}`)
+    .channel(`messagesEvent`)
     .on(
       "postgres_changes",
       {
@@ -15,38 +15,27 @@ export function subscribeToMessages(callback) {
       },
       (payload) => {
         callback("INSERT", payload.new);
+        console.log("New message payload:", payload);
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log(`Subscription status: ${status}`); // Log subscription status
+    });
 
   return channel;
 }
-export async function getMessageApis(searchQuery) {
+export async function getMessageApis() {
   const restaurantId = localStorage.getItem("restaurants_id");
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
 
-  const todayString = today.toISOString().split("T")[0];
-  const tomorrowString = tomorrow.toISOString().split("T")[0];
   try {
     let query = supabase
       .from("messages")
       .select(
-        `*, users(name), restaurants(restaurant_name, owner_name,logo), tables(table_no, id, is_booked, qr_image, is_available)`,
+        `*, users(name,mobile), restaurants(restaurant_name, owner_name,logo), tables(table_no, id, is_booked, qr_image, is_available),orders(*)`,
         {count: "exact"},
       )
-      .eq("restaurant_id", restaurantId)
-      .gte("created_at", todayString)
-      .lt("created_at", tomorrowString)
-      .limit(10);
+      .eq("restaurant_id", restaurantId);
 
-    // Apply search query if provided
-    if (searchQuery) {
-      query = query.ilike("tables.table_no", `%${searchQuery}%`);
-    }
-
-    // Fetch all messages without pagination
     const {data: messages, count, error} = await query;
 
     if (error) {
