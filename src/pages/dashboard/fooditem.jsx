@@ -1,9 +1,13 @@
 import {uploadImageToCloudinary} from "@/apis/cloudinary-upload";
 import {
   deleteFood,
+  getAdditionalSideId,
   getAllFoods,
   getCategories,
   getFoodCounts,
+  getQuantityId,
+  getQuickInstructionId,
+  getSideId,
   insertFood,
   updateFood,
 } from "@/apis/food-apis";
@@ -44,12 +48,17 @@ const TABLE_HEAD = [
 export function FoodItems() {
   const [foodData, setFoodData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
+  const [quantityId, setQuantityId] = useState([]);
+  const [quickInstructionId, setQuickInstructionId] = useState([]);
+  const [sideId, setSideId] = useState([]);
+  const [additionalSideId, setAdditionalSideId] = useState([]);
   const [loading, setLoading] = useState(true);
   const [maxItems, setMaxItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [maxRow, setMaxRow] = useState(10);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+
   const [openAddModal, setOpenAddModal] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -60,6 +69,12 @@ export function FoodItems() {
     isSpecial: false,
     image: "",
     quantity: "",
+    is_customized: false,
+    quantity_id: "",
+    quick_instruction_id: "",
+    side_id: "",
+    additional_side_id: "",
+    is_temperature: false,
   });
   const [formLoading, setFormLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -93,6 +108,12 @@ export function FoodItems() {
       isSpecial: false,
       image: "",
       quantity: "",
+      is_customized: false,
+      quantity_id: "",
+      quick_instruction_id: "",
+      side_id: "",
+      additional_side_id: "",
+      is_temperature: false,
     });
   };
 
@@ -111,7 +132,34 @@ export function FoodItems() {
       setCategoryData(categoryResult);
     }
   };
-
+  const fetchQuantityIdData = async () => {
+    const quantityIdResult = await getQuantityId();
+    if (quantityIdResult) {
+      setQuantityId(quantityIdResult);
+      console.log("quantityIdResult", quantityIdResult);
+    }
+  };
+  const fetchQuickInstructionIdData = async () => {
+    const quickInstructionIdResult = await getQuickInstructionId();
+    if (quickInstructionIdResult) {
+      setQuickInstructionId(quickInstructionIdResult);
+      console.log("quickInstructionIdResult", quickInstructionIdResult);
+    }
+  };
+  const fetchSideIdData = async () => {
+    const sideIdResult = await getSideId();
+    if (sideIdResult) {
+      setSideId(sideIdResult);
+      console.log("sideIdResult", sideIdResult);
+    }
+  };
+  const fetchAdditionalSideIdData = async () => {
+    const additionalSideIdResult = await getAdditionalSideId();
+    if (additionalSideIdResult) {
+      setAdditionalSideId(additionalSideIdResult);
+      console.log("additionalsideIdResult", additionalSideIdResult);
+    }
+  };
   const fetchCount = async () => {
     const result = await getFoodCounts();
     if (result) {
@@ -126,6 +174,10 @@ export function FoodItems() {
   useEffect(() => {
     fetchFoodData();
     fetchCategoryData();
+    fetchQuantityIdData();
+    fetchQuickInstructionIdData();
+    fetchSideIdData();
+    fetchAdditionalSideIdData();
     fetchCount();
   }, [maxRow, currentPage, loading, activeTab, searchQuery]);
   const totalPages = Math.ceil(maxItems / maxRow);
@@ -179,6 +231,9 @@ export function FoodItems() {
     if (formData.status === "") {
       newErrors.status = "Status must be Available or Unavailable";
     }
+    if (formData.is_customized === "") {
+      newErrors.is_customized = "is customized must must be Yes or No";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -224,6 +279,12 @@ export function FoodItems() {
       image: value.image,
       quantity: value.quantity,
       id: value.id,
+      is_customized: value.is_customized,
+      quantity_id: value.quantity_id,
+      quick_instruction_id: value.quick_instruction_id,
+      side_id: value.side_id,
+      additional_side_id: value.additional_side_id,
+      is_temperature: value.is_temperature,
     });
     toggleUpdateModal();
   };
@@ -383,6 +444,12 @@ export function FoodItems() {
                         is_available,
                         image,
                         id,
+                        is_customized,
+                        quantity_id,
+                        quick_instruction_id,
+                        side_id,
+                        additional_side_id,
+                        is_temperature,
                       },
                       index,
                     ) => {
@@ -502,6 +569,12 @@ export function FoodItems() {
                                     isSpecial: isSpecial,
                                     image: image,
                                     quantity: quantity,
+                                    is_customized: is_customized,
+                                    quantity_id: quantity_id,
+                                    quick_instruction_id: quick_instruction_id,
+                                    side_id: side_id,
+                                    additional_side_id: additional_side_id,
+                                    is_temperature: is_temperature,
                                   })
                                 }
                                 variant="text">
@@ -601,6 +674,10 @@ export function FoodItems() {
         setFormData={setFormData}
         handleOpen={toogleAddModal}
         categoryData={categoryData}
+        quantityId={quantityId}
+        quickInstructionId={quickInstructionId}
+        sideId={sideId}
+        additionalSideId={additionalSideId}
         handleSubmit={handleSubmit}
         loading={formLoading}
         errors={errors}
@@ -615,6 +692,10 @@ export function FoodItems() {
         loading={formLoading}
         errors={errors}
         categoryData={categoryData}
+        quantityId={quantityId}
+        quickInstructionId={quickInstructionId}
+        sideId={sideId}
+        additionalSideId={additionalSideId}
       />
       <DeleteFoodModal
         open={openDeleteModal}

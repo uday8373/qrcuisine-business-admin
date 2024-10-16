@@ -3,17 +3,15 @@ import supabase from "@/configs/supabase";
 export async function getActivityTableApis() {
   const restaurantId = localStorage.getItem("restaurants_id");
 
-  console.log("object", restaurantId);
   try {
     const {data, error} = await supabase
       .from("tables")
-      .select(`*`)
+      .select(`*,messages(*)`)
       .eq("restaurant_id", restaurantId);
 
     if (error) {
       throw error;
     } else {
-      console.log("object", data);
       return {data};
     }
   } catch (error) {
@@ -21,20 +19,18 @@ export async function getActivityTableApis() {
     throw error;
   }
 }
-export async function getOrderTableApis() {
-  const restaurantId = localStorage.getItem("restaurants_id");
 
-  console.log("object", restaurantId);
+export async function getOrderTableApis() {
+  const restaurantId = localStorage.getItem("restaurants_id"); // Ensure this is a UUID
+
   try {
-    const {data, error} = await supabase
-      .from("orders")
-      .select(`*,table_id(*),waiter_id(*),status_id(*),user_id(*),cancelled_reason(*)`)
-      .eq("restaurant_id", restaurantId);
+    const {data, error} = await supabase.rpc("group_orders_by_date", {
+      restaurant_id: restaurantId,
+    });
 
     if (error) {
       throw error;
     } else {
-      console.log("object", data);
       return {data};
     }
   } catch (error) {

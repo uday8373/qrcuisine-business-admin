@@ -76,6 +76,58 @@ export async function getCategories() {
     throw error;
   }
 }
+export async function getQuantityId() {
+  try {
+    const {data, error} = await supabase.from("food_quantity_group").select(`*`);
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+export async function getQuickInstructionId() {
+  try {
+    const {data, error} = await supabase.from("quick_instruction_group").select(`*`);
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+export async function getSideId() {
+  try {
+    const {data, error} = await supabase.from("side_group").select(`*`);
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+export async function getAdditionalSideId() {
+  try {
+    const {data, error} = await supabase.from("additional_sides_group").select(`*`);
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
 
 export async function insertFood(value) {
   const restaurantId = localStorage.getItem("restaurants_id");
@@ -92,6 +144,12 @@ export async function insertFood(value) {
           isSpecial: value.isSpecial,
           is_available: value.status,
           image: value.image,
+          is_customized: value.is_customized,
+          quantity_id: value.quantity_id,
+          quick_instruction_id: value.quick_instruction_id,
+          side_id: value.side_id,
+          additional_side_id: value.additional_side_id,
+          is_temperature: value.is_temperature,
           restaurant_id: restaurantId,
         },
       ])
@@ -121,6 +179,12 @@ export async function updateFood(value) {
           isSpecial: value.isSpecial,
           is_available: value.status,
           image: value.image,
+          is_customized: value.is_customized,
+          quantity_id: value.quantity_id,
+          quick_instruction_id: value.quick_instruction_id,
+          side_id: value.side_id,
+          additional_side_id: value.additional_side_id,
+          is_temperature: value.is_temperature,
         },
       ])
       .eq("id", value.id)

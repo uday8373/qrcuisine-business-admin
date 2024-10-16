@@ -15,7 +15,6 @@ export function subscribeToMessages(callback) {
       },
       (payload) => {
         callback("INSERT", payload.new);
-        console.log("New message payload:", payload);
       },
     )
     .subscribe((status) => {

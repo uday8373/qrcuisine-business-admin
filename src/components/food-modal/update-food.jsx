@@ -18,6 +18,10 @@ export function UpdateFoodModal({
   formData,
   setFormData,
   categoryData,
+  quantityId,
+  quickInstructionId,
+  sideId,
+  additionalSideId,
   handleOpen,
   loading,
   errors,
@@ -71,6 +75,45 @@ export function UpdateFoodModal({
       });
     }
   };
+  const handleIsCustomizedChange = (value) => {
+    setFormData({
+      ...formData,
+      is_customized: value,
+    });
+  };
+
+  const handleQuantityIdChange = (value) => {
+    setFormData({
+      ...formData,
+      quantity_id: value,
+    });
+  };
+  const handleQuickInstructionIdChange = (value) => {
+    setFormData({
+      ...formData,
+      quick_instruction_id: value,
+    });
+  };
+  const handleSideIdChange = (value) => {
+    setFormData({
+      ...formData,
+      side_id: value,
+    });
+  };
+  const handleAdditionalSideIdChange = (value) => {
+    setFormData({
+      ...formData,
+      additional_side_id: value,
+    });
+  };
+  const handleIsTemperatureChange = (value) => {
+    setFormData({
+      ...formData,
+      is_temperature: value,
+    });
+  };
+
+  console.log("object", formData);
 
   return (
     <>
@@ -356,6 +399,197 @@ export function UpdateFoodModal({
             {errors.image && (
               <Typography variant="small" color="red" className="mt-1">
                 {errors.image}
+              </Typography>
+            )}
+          </div>
+          <div>
+            <div>
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="mb-2 text-left font-medium">
+                Is Customized
+              </Typography>
+              <Select
+                className={`!w-full !border-[1.5px] !border-blue-gray-200/90 !border-t-blue-gray-200/90 bg-white text-gray-800 ring-4 ring-transparent placeholder:text-gray-600 focus:!border-primary focus:!border-t group-hover:!border-primary ${
+                  errors.is_customized ? "border-red-500" : ""
+                }`}
+                placeholder="Select if customized"
+                label="Select if customized"
+                value={String(formData.is_customized)}
+                size="lg"
+                onChange={handleIsCustomizedChange}
+                labelProps={{
+                  className: "hidden",
+                }}>
+                <Option key="true" value="true">
+                  Yes
+                </Option>
+                <Option key="false" value="false">
+                  No
+                </Option>
+              </Select>
+              {errors.is_customized && (
+                <Typography variant="small" color="red" className="mt-1">
+                  {errors.is_customized}
+                </Typography>
+              )}
+            </div>
+          </div>
+          <div>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="mb-2 text-left font-medium">
+              Quantity Group
+            </Typography>
+
+            <Select
+              className={`!w-full !border-[1.5px] !border-blue-gray-200/90 !border-t-blue-gray-200/90 bg-white text-gray-800 ring-4 ring-transparent placeholder:text-gray-600 focus:!border-primary focus:!border-t group-hover:!border-primary ${
+                errors.quantityId ? "border-red-500" : ""
+              }`}
+              placeholder="Select a category"
+              label="Select a category"
+              size="lg"
+              value={String(formData.quantity_id)}
+              onChange={handleQuantityIdChange}
+              labelProps={{
+                className: "hidden",
+              }}>
+              {quantityId.map((quantity, index) => (
+                <Option key={quantity.id} value={quantity.id}>
+                  {quantity?.title}
+                </Option>
+              ))}
+            </Select>
+            {errors.quantityId && (
+              <Typography variant="small" color="red" className="mt-1">
+                {errors.quantityId}
+              </Typography>
+            )}
+          </div>
+          <div>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="mb-2 text-left font-medium">
+              Quick Instruction Group
+            </Typography>
+            <Select
+              className={`!w-full !border-[1.5px] !border-blue-gray-200/90 !border-t-blue-gray-200/90 bg-white text-gray-800 ring-4 ring-transparent placeholder:text-gray-600 focus:!border-primary focus:!border-t group-hover:!border-primary ${
+                errors.quickInstructionId ? "border-red-500" : ""
+              }`}
+              placeholder="Select a category"
+              label="Select a category"
+              size="lg"
+              value={String(formData.quick_instruction_id)}
+              onChange={handleQuickInstructionIdChange}
+              labelProps={{
+                className: "hidden",
+              }}>
+              {quickInstructionId.map((quickInstruction, index) => (
+                <Option key={quickInstruction.id} value={quickInstruction.id}>
+                  {quickInstruction?.title}
+                </Option>
+              ))}
+            </Select>
+            {errors.quickInstructionId && (
+              <Typography variant="small" color="red" className="mt-1">
+                {errors.quickInstructionId}
+              </Typography>
+            )}
+          </div>
+          <div>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="mb-2 text-left font-medium">
+              Side Group
+            </Typography>
+            <Select
+              className={`!w-full !border-[1.5px] !border-blue-gray-200/90 !border-t-blue-gray-200/90 bg-white text-gray-800 ring-4 ring-transparent placeholder:text-gray-600 focus:!border-primary focus:!border-t group-hover:!border-primary ${
+                errors.sideId ? "border-red-500" : ""
+              }`}
+              placeholder="Select a category"
+              label="Select a category"
+              size="lg"
+              value={String(formData.side_id)}
+              onChange={handleSideIdChange}
+              labelProps={{
+                className: "hidden",
+              }}>
+              {sideId.map((Side, index) => (
+                <Option key={Side.id} value={Side.id}>
+                  {Side?.title}
+                </Option>
+              ))}
+            </Select>
+            {errors.sideId && (
+              <Typography variant="small" color="red" className="mt-1">
+                {errors.sideId}
+              </Typography>
+            )}
+          </div>
+          <div>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="mb-2 text-left font-medium">
+              Additional Side Group
+            </Typography>
+            <Select
+              className={`!w-full !border-[1.5px] !border-blue-gray-200/90 !border-t-blue-gray-200/90 bg-white text-gray-800 ring-4 ring-transparent placeholder:text-gray-600 focus:!border-primary focus:!border-t group-hover:!border-primary ${
+                errors.additionalSideId ? "border-red-500" : ""
+              }`}
+              placeholder="Select a category"
+              label="Select a category"
+              size="lg"
+              value={String(formData.additional_side_id)}
+              onChange={handleAdditionalSideIdChange}
+              labelProps={{
+                className: "hidden",
+              }}>
+              {additionalSideId.map((AdditionalSide, index) => (
+                <Option key={AdditionalSide.id} value={AdditionalSide.id}>
+                  {AdditionalSide?.title}
+                </Option>
+              ))}
+            </Select>
+            {errors.additionalSideId && (
+              <Typography variant="small" color="red" className="mt-1">
+                {errors.additionalSideId}
+              </Typography>
+            )}
+          </div>
+          <div>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="mb-2 text-left font-medium">
+              Is Temperature
+            </Typography>
+            <Select
+              className={`!w-full !border-[1.5px] !border-blue-gray-200/90 !border-t-blue-gray-200/90 bg-white text-gray-800 ring-4 ring-transparent placeholder:text-gray-600 focus:!border-primary focus:!border-t group-hover:!border-primary ${
+                errors.is_temperature ? "border-red-500" : ""
+              }`}
+              placeholder="Select if customized"
+              label="Select if customized"
+              value={String(formData.is_temperature)}
+              size="lg"
+              onChange={handleIsTemperatureChange}
+              labelProps={{
+                className: "hidden",
+              }}>
+              <Option key="true" value="true">
+                Yes
+              </Option>
+              <Option key="false" value="false">
+                No
+              </Option>
+            </Select>
+            {errors.is_temperature && (
+              <Typography variant="small" color="red" className="mt-1">
+                {errors.is_temperature}
               </Typography>
             )}
           </div>
