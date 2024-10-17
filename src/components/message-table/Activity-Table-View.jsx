@@ -38,6 +38,7 @@ const ActivityTableView = ({tableId, tableNo}) => {
   const [openView, setOpenView] = useState(false);
   const openDrawer = (orderId) => {
     setSelectedOrderId(orderId);
+    console.log("orderId", orderId);
     setOpenView(true);
   };
   const closeDrawer = () => {
@@ -410,7 +411,10 @@ const ActivityTableView = ({tableId, tableNo}) => {
               </div>
             ) : (
               filteredOrders.map((group, index) => (
-                <Accordion key={index} open={open === index}>
+                <Accordion
+                  key={index}
+                  icon={<Icon id={index} open={open} />}
+                  open={open === index}>
                   <AccordionHeader
                     className="bg-gray-300 px-5"
                     onClick={() => handleOpen(index)}>
@@ -464,6 +468,7 @@ const ActivityTableView = ({tableId, tableNo}) => {
 
                             <div>
                               <Button
+                                onClick={() => openDrawer(order?.id)}
                                 size="lg"
                                 variant="filled"
                                 className="flex items-center justify-center flex-col w-full h-full rounded-none"
@@ -473,7 +478,7 @@ const ActivityTableView = ({tableId, tableNo}) => {
                             </div>
                             <div className="bg-green-500 flex items-center justify-center rounded-r-xl">
                               <Typography variant="h6" color="white">
-                                Rs. {order.total_amount}
+                                Rs. {order.grand_amount}
                               </Typography>
                             </div>
                           </div>
@@ -595,7 +600,7 @@ const ActivityTableView = ({tableId, tableNo}) => {
       <ViewOrder
         open={openView}
         closeDrawer={closeDrawer}
-        sortedMessageData={sortedMessageData}
+        orderTable={orderTable}
         selectedOrderId={selectedOrderId}
       />
     </div>
