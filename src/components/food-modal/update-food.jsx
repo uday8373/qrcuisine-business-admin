@@ -113,8 +113,6 @@ export function UpdateFoodModal({
     });
   };
 
-  console.log("object", formData);
-
   return (
     <>
       <Dialog size="sm" open={open} handler={handleOpen} className="p-4">

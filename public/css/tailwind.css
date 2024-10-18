@@ -12,3 +12,10 @@
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+@font-face {
+  font-family: "Amsterdam";
+  src:
+    local("Amsterdam"),
+    url("./fonts/Amsterdam.otf") format("opentype");
+}
