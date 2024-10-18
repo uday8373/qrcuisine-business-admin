@@ -7,8 +7,6 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
     ?.flatMap((group) => group.orders)
     .find((order) => order.id === selectedOrderId);
 
-  console.log("object selected order", selectedOrder);
-
   return (
     <Drawer
       overlay={true}

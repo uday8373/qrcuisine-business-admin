@@ -6,7 +6,7 @@ export async function getActivityTableApis() {
   try {
     const {data, error} = await supabase
       .from("tables")
-      .select(`*,messages(*)`)
+      .select(`*,messages(*), order_id(*,status_id(*)), user_id(*)`)
       .eq("restaurant_id", restaurantId);
 
     if (error) {
