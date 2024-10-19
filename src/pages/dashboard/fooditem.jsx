@@ -136,28 +136,24 @@ export function FoodItems() {
     const quantityIdResult = await getQuantityId();
     if (quantityIdResult) {
       setQuantityId(quantityIdResult);
-      console.log("quantityIdResult", quantityIdResult);
     }
   };
   const fetchQuickInstructionIdData = async () => {
     const quickInstructionIdResult = await getQuickInstructionId();
     if (quickInstructionIdResult) {
       setQuickInstructionId(quickInstructionIdResult);
-      console.log("quickInstructionIdResult", quickInstructionIdResult);
     }
   };
   const fetchSideIdData = async () => {
     const sideIdResult = await getSideId();
     if (sideIdResult) {
       setSideId(sideIdResult);
-      console.log("sideIdResult", sideIdResult);
     }
   };
   const fetchAdditionalSideIdData = async () => {
     const additionalSideIdResult = await getAdditionalSideId();
     if (additionalSideIdResult) {
       setAdditionalSideId(additionalSideIdResult);
-      console.log("additionalsideIdResult", additionalSideIdResult);
     }
   };
   const fetchCount = async () => {

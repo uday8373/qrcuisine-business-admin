@@ -21,6 +21,7 @@ import TableGrid from "./pages/dashboard/table-grid";
 import Ratings from "./pages/dashboard/ratings";
 import Messages from "./pages/dashboard/messages";
 import ActivityTable from "./pages/dashboard/activity-table";
+import QRView from "./pages/dashboard/qr-view";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -84,12 +85,12 @@ export const routes = [
         path: "/table-activity",
         element: <ActivityTable />,
       },
-      // {
-      //   icon: <InformationCircleIcon {...icon} />,
-      //   name: "messages",
-      //   path: "/messages",
-      //   element: <Messages />,
-      // },
+      {
+        icon: <InformationCircleIcon {...icon} />,
+        name: "QRView",
+        path: "/QRView",
+        element: <QRView />,
+      },
       {
         icon: <StarIcon {...icon} />,
         name: "Ratings",
