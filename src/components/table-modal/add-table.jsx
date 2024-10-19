@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {
   Input,
   Button,
@@ -28,9 +28,34 @@ export function AddTableModal({
     });
   };
 
+  const handleBeforeUnload = (e) => {
+    if (loading) {
+      e.preventDefault();
+      e.returnValue = ""; // Required for most browsers to trigger the confirmation
+    }
+  };
+
+  useEffect(() => {
+    if (loading) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    } else {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    }
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [loading]);
+
   return (
     <>
-      <Dialog size="sm" open={open} handler={handleOpen} className="p-4">
+      <Dialog
+        size="sm"
+        open={open}
+        handler={handleOpen}
+        className="p-4"
+        backdrop={loading ? null : true}>
         <DialogHeader className="relative m-0 block">
           <Typography variant="h4" color="blue-gray">
             Generate Tables
@@ -39,6 +64,7 @@ export function AddTableModal({
             Generate a table for your store.
           </Typography>
           <IconButton
+            disabled={loading}
             size="sm"
             variant="text"
             className="!absolute right-3.5 top-3.5"

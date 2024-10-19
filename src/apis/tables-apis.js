@@ -5,6 +5,7 @@ import html2canvas from "html2canvas";
 import {WEB_CONFIG} from "@/configs/website-config";
 
 import QRbg from "/QRbg.jpg";
+import QRCodeStyling from "qr-code-styling";
 
 export async function getAllTables(page, pageSize, status, searchQuery) {
   const restaurantId = localStorage.getItem("restaurants_id");
@@ -148,50 +149,44 @@ export async function insertTables(numberOfTables) {
 async function generateQRTemplateImage(table_no, qr_code) {
   const element = document.createElement("div");
   element.innerHTML = `
-   <div style="width: 500px; height: 750px; background-color: rgba(106, 176, 74, 0.3); background-image: url(${QRbg}); background-size: cover; background-position: center; display: flex; flex-direction: column; position: relative; margin: 0 auto; line-height: 0px;">
-            <div style="width: 100%; height: 6%;  border-radius: 0px 0px 20px 20px; background-color: #6ab04a;"></div>
-            <div style="display: flex; flex-direction: column; width: 100%; height: 94%; align-items: center; gap: 20px; position: relative;">
-              <div style="width: 100%; height: 20%; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 0px 0px 20px 20px;">
-                <div style="width: 26%; height: 100%; background-color: #FF9A04; display: flex; flex-direction: column; border-radius: 0px 0px 20px 20px; align-items: center; gap: 35px;">
-                  <h2 style="text-transform: uppercase; text-align: center; font-size: 1.1rem; font-weight: 600; color: #ffffff; font-family: Montserrat; padding-top: 20px;">
-                    Table
-                  </h2>
-                  <h2 style="text-transform: uppercase; text-align: center; font-size: 3rem; font-weight: 800; color: #ffffff; font-family: Montserrat;">
-                    ${table_no}
-                  </h2>
-                </div>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 2px; flex-direction: column;">
-                <img src="/contact.png" alt="QR Code" style="width: 130px;" />
-                <h3 style="font-size: 1.7rem; font-weight: 600; color: #404040; padding-top: 0.5em; font-family: Montserrat; text-transform: uppercase; padding-bottom: 15px;">
-                  MENU + ORDER
-                </h3>
-              </div>
-              <div style="background-color: #fff; border-radius: 2rem; padding: 20px; border: 6px solid #6ab04a;">
-                <img src="${qr_code}" alt="QR Code" style="width: 160px;" />
-              </div>
-              <div style="width: 60%; height: 10%; background-color: #FF9A04; border-radius: 20px 20px 0px 0px; position: absolute; bottom: 15px;"></div>
-              <div style="background-color: #6ab04a; display: flex; width: 100%; height: 11%; justify-content: space-between; align-items: center; bottom: 0; gap: 16px; padding: 0px 20px; position: absolute;">
-                <div style="width: 100%;">
-                  <img src="/QRWhite.png" alt="Logo" style="width: 90px;" />
-                </div>
-                <div style="padding: 2px; height: 100%; position: relative; background-color: #fff;"></div>
-                <div style="background-color: #d08; width: 100%;">
-                  <h3 style="font-size: 1rem; font-weight: 500; color: #fff; font-family: Montserrat;">
-                    www.qrcuisine.com
-                  </h3>
-                </div>
-              </div>
-            </div>
-          </div>
+   <div style="width: 1180px; height: 1800px; background-color: rgba(106, 176, 74, 0.3); background-image: url(${QRbg}); background-size: cover; background-position: center; display: flex; flex-direction: column; position: relative; margin: 0 auto; line-height: 0rem;">
+<div style="width: 100%; height: 5%;  border-radius: 0px 0px 3rem 3rem; background-color: #6ab04a;"></div>
+<div style="display: flex; flex-direction: column; width: 100%; height: 95%; align-items: center; gap: 20px; position: relative;">
+   <div style="width: 100%; height: 21%;  display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 0px 0px 3rem 3rem; ">
+      <div style="width: 30%; height: 100%; background-color: #FF9A04; display: flex; flex-direction: column; border-radius: 0px 0px 3rem 3rem; align-items: center;  justify-content: start; gap: 6rem">
+         <h2 style="text-transform: uppercase; padding-top: 4rem; text-align: center; font-size: 4rem; font-weight: 600; color: #ffffff; font-family: Montserrat;">
+            Table
+         </h2>
+         <h2 style="text-transform: uppercase; text-align: center; font-size: 10rem; font-weight: 800; color: #ffffff; font-family: Montserrat;  letter-spacing: 0.03em;">
+            ${table_no}
+         </h2>
+      </div>
+   </div>
+   <div style="display: flex; justify-content: space-between; align-items: center; gap: 2px; flex-direction: column;">
+      <img src="/contact.png" alt="QR Code" style="width: 400px; padding-top: 3rem;" />
+      <h3 style="font-size: 5rem; font-weight: 600; color: #404040; font-family: Montserrat; text-transform: uppercase; padding-top: 3rem;">
+         MENU + ORDER
+      </h3>
+   </div>
+   <div style="background-color: #fff; border-radius: 3rem; padding: 15px; border: 20px solid #6ab04a; margin-top: 10rem;">
+      <img src="${qr_code}" alt="QR Code" style="width: 510px;" />
+   </div>
+   <div style="width: 60%; height: 10%; justify-content: center; display: flex; background-color: #FF9A04; border-radius: 3rem 3rem 0px 0px; position: absolute; bottom: 15px; padding-top: 1rem;">
+      <h3 style="font-size: 2rem; font-weight: 500; color: #fff; font-family: Montserrat; ">
+         www.qrcuisine.com
+      </h3>
+   </div>
+   <div style="background-color: #6ab04a; border-radius: 3rem 3rem 0px 0px ; display: flex; width: 100%; height: 7%; justify-content: center; align-items: center; bottom: 0; position: absolute;">
+      <img src="/QRWhite.png" alt="Logo" style="width: 200px;" />
+   </div>
+</div>
 `;
 
   document.body.appendChild(element);
 
   const canvas = await html2canvas(element, {
-    scale: 5,
-    windowWidth: "500px",
-    windowHeight: "750px",
+    windowWidth: "1200px",
+    windowHeight: "1800px",
   });
   const dataUrl = canvas.toDataURL();
 
@@ -200,14 +195,57 @@ async function generateQRTemplateImage(table_no, qr_code) {
   return dataUrl;
 }
 
+async function getBase64FromQRCode(qrCode, format) {
+  return new Promise((resolve, reject) => {
+    qrCode
+      .getRawData(format)
+      .then((blob) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result); // Return the base64 data URL
+        };
+        reader.onerror = (err) => {
+          reject(err);
+        };
+        reader.readAsDataURL(blob); // Convert the blob to base64
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+}
+
 async function generateQRCode(restaurantId, tableId) {
   const baseUrl = WEB_CONFIG.isProduction
     ? WEB_CONFIG.productionBaseUrl
     : WEB_CONFIG.developementBaseUrl;
   const url = `${baseUrl}/${restaurantId}/${tableId}`;
   try {
-    const qrCodeDataURL = await QRCode.toDataURL(url);
-    return qrCodeDataURL;
+    // const qrCodeDataURL = await QRCode.toDataURL(url, {
+    //   scale: 10,
+    //   maskPattern: 7,
+    //   color: {
+    //     dark: "#404040",
+    //     light: "#ffffff",
+    //   },
+    // });
+
+    const qrCodeDataURL = new QRCodeStyling({
+      width: 300,
+      height: 300,
+      data: url,
+      dotsOptions: {
+        color: "#0a0a0a",
+        type: "extra-rounded",
+      },
+      backgroundOptions: {
+        color: "#fff",
+      },
+    });
+
+    const base64Image = await getBase64FromQRCode(qrCodeDataURL, "png");
+
+    return base64Image;
   } catch (error) {
     console.error("Error generating QR code:", error);
     throw error;
