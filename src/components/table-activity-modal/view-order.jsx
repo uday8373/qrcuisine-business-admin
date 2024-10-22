@@ -1,6 +1,7 @@
 import React from "react";
 import {Drawer, Typography, Chip, Avatar, IconButton} from "@material-tailwind/react";
 import moment from "moment";
+import {WEB_CONFIG} from "@/configs/website-config";
 
 export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTable}) {
   const selectedOrder = orderTable
@@ -161,7 +162,8 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                           variant="paragraph"
                           color="blue-gray"
                           className="font-normal">
-                          ₹ {`${(food?.price * food.quantity).toFixed(2)}`}
+                          {WEB_CONFIG?.currencySymbol}{" "}
+                          {`${(food?.price * food.quantity).toFixed(2)}`}
                         </Typography>
                       </div>
                     </div>
@@ -194,7 +196,7 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                   Subtotal
                 </Typography>
                 <Typography variant="paragraph" color="blue-gray" className="font-normal">
-                  ₹ {selectedOrder?.total_amount.toFixed(2)}
+                  {WEB_CONFIG?.currencySymbol} {selectedOrder?.total_amount.toFixed(2)}
                 </Typography>
               </div>
               <div className="flex justify-between gap-3">
@@ -202,7 +204,7 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                   GST
                 </Typography>
                 <Typography variant="paragraph" color="blue-gray" className="font-normal">
-                  ₹ {selectedOrder?.tax_amount.toFixed(2)}
+                  {WEB_CONFIG?.currencySymbol} {selectedOrder?.tax_amount.toFixed(2)}
                 </Typography>
               </div>
               <div className="flex justify-between gap-3">
@@ -213,7 +215,7 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                   Total
                 </Typography>
                 <Typography variant="lead" color="green" className="font-semibold">
-                  ₹ {selectedOrder?.grand_amount.toFixed(2)}
+                  {WEB_CONFIG?.currencySymbol} {selectedOrder?.grand_amount.toFixed(2)}
                 </Typography>
               </div>
             </div>

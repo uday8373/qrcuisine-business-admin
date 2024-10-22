@@ -1,6 +1,7 @@
 import React, {useEffect} from "react";
 import {Drawer, Typography, IconButton, Chip, Avatar} from "@material-tailwind/react";
 import moment from "moment";
+import {WEB_CONFIG} from "@/configs/website-config";
 
 export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer}) {
   useEffect(() => {
@@ -180,7 +181,8 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
                       variant="paragraph"
                       color="blue-gray"
                       className="font-normal">
-                      ₹ {(food?.price * food?.quantity).toFixed(2)}
+                      {WEB_CONFIG?.currencySymbol}{" "}
+                      {(food?.price * food?.quantity).toFixed(2)}
                     </Typography>
                   </div>
                 </div>
@@ -413,7 +415,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             Subtotal
           </Typography>
           <Typography variant="paragraph" color="blue-gray" className="font-normal">
-            ₹ {selectedData?.total_amount.toFixed(2)}
+            {WEB_CONFIG?.currencySymbol} {selectedData?.total_amount.toFixed(2)}
           </Typography>
         </div>
         <div className="flex justify-between gap-3">
@@ -421,7 +423,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             GST
           </Typography>
           <Typography variant="paragraph" color="blue-gray" className="font-normal">
-            ₹ {selectedData?.tax_amount.toFixed(2)}
+            {WEB_CONFIG?.currencySymbol} {selectedData?.tax_amount.toFixed(2)}
           </Typography>
         </div>
         <div className="flex justify-between gap-3">
@@ -429,7 +431,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             Total
           </Typography>
           <Typography variant="lead" color="green" className="font-semibold">
-            ₹ {selectedData?.grand_amount.toFixed(2)}
+            {WEB_CONFIG?.currencySymbol} {selectedData?.grand_amount.toFixed(2)}
           </Typography>
         </div>
       </div>
