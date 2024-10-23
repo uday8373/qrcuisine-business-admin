@@ -227,9 +227,6 @@ export function FoodItems() {
     if (formData.status === "") {
       newErrors.status = "Status must be Available or Unavailable";
     }
-    if (formData.is_customized === "") {
-      newErrors.is_customized = "is customized must must be Yes or No";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
