@@ -71,10 +71,10 @@ export function FoodItems() {
     image: "",
     quantity: "",
     is_customized: false,
-    quantity_id: "",
-    quick_instruction_id: "",
-    side_id: "",
-    additional_side_id: "",
+    quantity_id: null,
+    quick_instruction_id: null,
+    side_id: null,
+    additional_side_id: null,
     is_temperature: false,
   });
   const [formLoading, setFormLoading] = useState(false);
@@ -110,10 +110,10 @@ export function FoodItems() {
       image: "",
       quantity: "",
       is_customized: false,
-      quantity_id: "",
-      quick_instruction_id: "",
-      side_id: "",
-      additional_side_id: "",
+      quantity_id: null,
+      quick_instruction_id: null,
+      side_id: null,
+      additional_side_id: null,
       is_temperature: false,
     });
   };
@@ -287,8 +287,20 @@ export function FoodItems() {
     const isValid = validateForm();
     if (!isValid) return;
     setFormLoading(true);
+
     try {
-      await updateFood(formData);
+      let imageUrl = formData.image;
+
+      if (typeof formData.image === "object") {
+        imageUrl = await uploadImageToCloudinary(formData.image);
+      }
+
+      const dataToUpdate = {
+        ...formData,
+        image: imageUrl,
+      };
+
+      await updateFood(dataToUpdate);
     } catch (error) {
       console.error("Error updating food:", error);
     } finally {
