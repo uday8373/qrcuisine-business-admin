@@ -14,6 +14,7 @@ import {
 import {AddFoodModal} from "@/components/food-modal/add-food";
 import {DeleteFoodModal} from "@/components/food-modal/delete-food";
 import {UpdateFoodModal} from "@/components/food-modal/update-food";
+import {WEB_CONFIG} from "@/configs/website-config";
 import {MagnifyingGlassIcon, ChevronUpDownIcon} from "@heroicons/react/24/outline";
 import {PencilIcon, PlusCircleIcon, TrashIcon} from "@heroicons/react/24/solid";
 import {
@@ -504,7 +505,7 @@ export function FoodItems() {
                                 variant="small"
                                 color="blue-gray"
                                 className="font-normal">
-                                ₹ {price}.00
+                                {WEB_CONFIG?.currencySymbol} {price}.00
                               </Typography>
                               <Typography
                                 variant="small"

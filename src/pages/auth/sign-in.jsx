@@ -41,8 +41,12 @@ export function SignIn() {
 
     setIsLoading(true);
 
+    const baseUrl = WEB_CONFIG.isProduction
+      ? WEB_CONFIG?.productionBaseUrl
+      : WEB_CONFIG?.developementBaseUrl;
+
     try {
-      const response = await fetch("https://www.qrcuisine.com/api/sign-in", {
+      const response = await fetch(`${baseUrl}/api/sign-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +99,7 @@ export function SignIn() {
   const fetchRestaurantData = async (adminId) => {
     const {data, error} = await supabase
       .from("restaurants")
-      .select("id, upload_preset, cloud_name, unique_name")
+      .select("*")
       .eq("admin_id", adminId)
       .single();
 

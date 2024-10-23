@@ -13,6 +13,7 @@ import {
 import {CancelOrder} from "@/components/order-modal/cancel-order";
 import {ViewOrderDrawer} from "@/components/order-modal/view-order";
 import supabase from "@/configs/supabase";
+import {WEB_CONFIG} from "@/configs/website-config";
 import {MagnifyingGlassIcon, ChevronUpDownIcon} from "@heroicons/react/24/outline";
 import {EyeIcon, StopIcon} from "@heroicons/react/24/solid";
 import {
@@ -643,7 +644,7 @@ export function Orders() {
                                   variant="small"
                                   color="blue-gray"
                                   className="font-medium">
-                                  ₹ {grand_amount.toFixed(2)}
+                                  {WEB_CONFIG?.currencySymbol} {grand_amount.toFixed(2)}
                                 </Typography>
                               </div>
                             </td>

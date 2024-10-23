@@ -6,4 +6,5 @@ export const WEB_CONFIG = {
   developementVersion: "1.1.D",
   productionBaseUrl: "https://qrcuisine.com",
   developementBaseUrl: "https://qrcfrontend.netlify.app",
+  currencySymbol: "$",
 };

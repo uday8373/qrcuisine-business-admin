@@ -32,6 +32,7 @@ import VisitorChart from "@/components/charts/visitor-chart";
 import moment from "moment";
 import UserChart from "@/components/charts/user-chart";
 import RevenueChart from "@/components/charts/revenue-chart";
+import {WEB_CONFIG} from "@/configs/website-config";
 
 const tabs = [
   {label: "Today", value: "today"},
@@ -518,7 +519,7 @@ export function Home() {
       <div className="mb-8 grid gap-y-6 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
         <StatisticsCard
           color="gray"
-          value={`₹ ${orderTotalAmount.toFixed(2)}`}
+          value={`${WEB_CONFIG?.currencySymbol} ${orderTotalAmount.toFixed(2)}`}
           title={`${getTitlePrefixByTab(selectedTab)} Sales`}
           icon={React.createElement(BanknotesIcon, {
             className: "w-6 h-6 text-white",

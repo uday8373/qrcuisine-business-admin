@@ -30,7 +30,7 @@ export async function getMessageApis() {
     let query = supabase
       .from("messages")
       .select(
-        `*, users(name,mobile), restaurants(restaurant_name, owner_name,logo), tables(table_no, id, is_booked, qr_image, is_available),orders(*)`,
+        `*, users(name,mobile), restaurants(restaurant_name, owner_name,logo), tables(table_no, id, is_booked, qr_image, is_available),orders(*), user_id(*)`,
         {count: "exact"},
       )
       .eq("restaurant_id", restaurantId);
