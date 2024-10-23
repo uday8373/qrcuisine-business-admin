@@ -1,25 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Chip,
-  Spinner,
-  Typography,
-} from "@material-tailwind/react";
+import {Card, CardBody, CardHeader, Spinner, Typography} from "@material-tailwind/react";
 
 import {getActivityTableApis} from "@/apis/activity-table-api";
 import ActivityTableView from "@/components/message-table/Activity-Table-View";
 import supabase from "@/configs/supabase";
-
-function timeAgo(createdDate) {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now - new Date(createdDate)) / 1000);
-  if (diffInSeconds < 60) return `${diffInSeconds} sec ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  return `${Math.floor(diffInSeconds / 86400)} days ago`;
-}
 
 export default function ActivityTable() {
   const [tableData, setTableData] = useState([]);
@@ -30,20 +14,9 @@ export default function ActivityTable() {
   const fetchTablesData = async () => {
     const tablesResult = await getActivityTableApis();
     if (tablesResult) {
-      const tablesWithSortedMessages = tablesResult.data.map((table) => ({
-        ...table,
-        messages: table.messages.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at),
-        ),
-      }));
-
-      const sortedTables = tablesWithSortedMessages.sort((a, b) => {
-        const latestMessageA = a.messages[0]?.created_at
-          ? new Date(a.messages[0]?.created_at)
-          : new Date(0); // Default to the earliest date if no messages
-        const latestMessageB = b.messages[0]?.created_at
-          ? new Date(b.messages[0]?.created_at)
-          : new Date(0);
+      const sortedTables = tablesResult.data.sort((a, b) => {
+        const latestMessageA = a.created_at ? new Date(a.created_at) : new Date(0);
+        const latestMessageB = b.created_at ? new Date(b.created_at) : new Date(0);
         return latestMessageB - latestMessageA;
       });
 
@@ -68,7 +41,7 @@ export default function ActivityTable() {
           table: "tables",
           filter: `restaurant_id=eq.${restaurantId}`,
         },
-        async (payload) => {
+        async () => {
           fetchTablesData();
         },
       )
@@ -160,13 +133,6 @@ export default function ActivityTable() {
                                 : data?.is_booked
                                 ? "Booked"
                                 : "Vacant"}
-                            </Typography>
-
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal">
-                              Last activity {timeAgo(data?.messages[0]?.created_at)}
                             </Typography>
                             {/* {selectedTable?.id === data?.id && (
                               <Chip
