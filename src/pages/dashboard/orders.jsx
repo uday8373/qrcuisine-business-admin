@@ -644,7 +644,8 @@ export function Orders() {
                                   variant="small"
                                   color="blue-gray"
                                   className="font-medium">
-                                  {WEB_CONFIG?.currencySymbol} {grand_amount.toFixed(2)}
+                                  {WEB_CONFIG?.currencySymbol}
+                                  {grand_amount.toFixed(2)}
                                 </Typography>
                               </div>
                             </td>

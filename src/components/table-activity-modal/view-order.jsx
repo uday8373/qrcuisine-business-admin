@@ -162,7 +162,7 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                           variant="paragraph"
                           color="blue-gray"
                           className="font-normal">
-                          {WEB_CONFIG?.currencySymbol}{" "}
+                          {WEB_CONFIG?.currencySymbol}
                           {`${(food?.price * food.quantity).toFixed(2)}`}
                         </Typography>
                       </div>
@@ -196,7 +196,8 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                   Subtotal
                 </Typography>
                 <Typography variant="paragraph" color="blue-gray" className="font-normal">
-                  {WEB_CONFIG?.currencySymbol} {selectedOrder?.total_amount.toFixed(2)}
+                  {WEB_CONFIG?.currencySymbol}
+                  {selectedOrder?.total_amount.toFixed(2)}
                 </Typography>
               </div>
               <div className="flex justify-between gap-3">
@@ -204,7 +205,8 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                   GST
                 </Typography>
                 <Typography variant="paragraph" color="blue-gray" className="font-normal">
-                  {WEB_CONFIG?.currencySymbol} {selectedOrder?.tax_amount.toFixed(2)}
+                  {WEB_CONFIG?.currencySymbol}
+                  {selectedOrder?.tax_amount.toFixed(2)}
                 </Typography>
               </div>
               <div className="flex justify-between gap-3">
@@ -215,7 +217,8 @@ export default function ViewOrder({open, closeDrawer, selectedOrderId, orderTabl
                   Total
                 </Typography>
                 <Typography variant="lead" color="green" className="font-semibold">
-                  {WEB_CONFIG?.currencySymbol} {selectedOrder?.grand_amount.toFixed(2)}
+                  {WEB_CONFIG?.currencySymbol}
+                  {selectedOrder?.grand_amount.toFixed(2)}
                 </Typography>
               </div>
             </div>

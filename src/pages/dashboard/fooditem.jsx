@@ -517,7 +517,8 @@ export function FoodItems() {
                                 variant="small"
                                 color="blue-gray"
                                 className="font-normal">
-                                {WEB_CONFIG?.currencySymbol} {price}.00
+                                {WEB_CONFIG?.currencySymbol}
+                                {price}.00
                               </Typography>
                               <Typography
                                 variant="small"

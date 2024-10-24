@@ -17,7 +17,7 @@ export function Footer({brandName, brandLink, routes}) {
             className="transition-colors hover:text-blue-500 font-bold">
             {brandName}
           </a>{" "}
-          for a better web.
+          for a better dining experience.
         </Typography>
         <ul className="flex items-center gap-4">
           {routes.map(({name, path}) => (

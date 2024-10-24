@@ -104,6 +104,37 @@ export function AddTableModal({
               </Typography>
             )}
           </div>
+          <div>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="mb-2 text-left font-medium">
+              Number of Seat Capacity
+            </Typography>
+            <Input
+              type="number"
+              color="gray"
+              size="lg"
+              placeholder="eg. 10"
+              name="max_capacity"
+              value={formData.max_capacity}
+              onChange={handleTableNumberChange}
+              className={`placeholder:opacity-100 focus:!border-t-gray-900 !border-t-gray-400 ${
+                errors.max_capacity ? "border-red-500" : ""
+              }`}
+              containerProps={{
+                className: "!min-w-full",
+              }}
+              labelProps={{
+                className: "hidden",
+              }}
+            />
+            {errors.max_capacity && (
+              <Typography variant="small" color="red" className="mt-1">
+                {errors.max_capacity}
+              </Typography>
+            )}
+          </div>
         </DialogBody>
         <DialogFooter>
           <Button

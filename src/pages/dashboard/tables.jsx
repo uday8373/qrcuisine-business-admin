@@ -35,6 +35,7 @@ const TABLE_HEAD = [
   "Order ID",
   "Order Status",
   "Number Of Customer",
+  "Seat Capacity",
   "Customer Info",
   "QR Code",
   "action",
@@ -51,6 +52,7 @@ export function Tables() {
   const [formData, setFormData] = useState({
     numberOfTable: "",
     table_no: "",
+    max_capacity: "",
   });
   const [formLoading, setFormLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -81,7 +83,7 @@ export function Tables() {
   const [selectedQr, setSelectedQr] = useState("");
 
   const resetFormData = () => {
-    setFormData({numberOfTable: "", table_no: ""});
+    setFormData({numberOfTable: "", table_no: "", max_capacity: ""});
   };
 
   const fetchTablesData = async () => {
@@ -154,7 +156,7 @@ export function Tables() {
     if (!isValid) return;
     setFormLoading(true);
     try {
-      await insertTables(parseInt(formData.numberOfTable, 10));
+      await insertTables(parseInt(formData.numberOfTable, 10), formData.max_capacity);
     } catch (error) {
       console.error("Error adding tables:", error);
     } finally {
@@ -173,6 +175,15 @@ export function Tables() {
       const tableNo = parseInt(formData.numberOfTable.trim(), 10);
       if (isNaN(tableNo) || tableNo < 1 || tableNo > 20) {
         newErrors.numberOfTable = "Number of table must be between 1 and 20";
+      }
+    }
+
+    if (!formData.max_capacity || formData.max_capacity.trim() === "") {
+      newErrors.max_capacity = "Number of seat capacity is required";
+    } else {
+      const maxCapacity = parseInt(formData.max_capacity.trim(), 10);
+      if (isNaN(maxCapacity) || maxCapacity < 1 || maxCapacity > 10) {
+        newErrors.max_capacity = "Number of seat capacity must be between 1 and 10";
       }
     }
 
@@ -312,7 +323,7 @@ export function Tables() {
                 variant="outlined"
                 className="flex items-center gap-3"
                 size="sm">
-                <CloudArrowDownIcon strokeWidth={2} className="h-4 w-4" /> Download QR
+                <CloudArrowDownIcon strokeWidth={2} className="h-4 w-4" /> Download All QR
               </Button>
               <Button
                 onClick={toogleAddModal}
@@ -497,6 +508,14 @@ export function Tables() {
                             color="blue-gray"
                             className="font-normal">
                             {table?.persons ? `${table?.persons} persons` : "N/A"}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal">
+                            {table?.max_capacity} persons
                           </Typography>
                         </td>
                         <td className={className}>

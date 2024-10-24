@@ -102,7 +102,7 @@ export async function getTableCounts() {
   }
 }
 
-export async function insertTables(numberOfTables) {
+export async function insertTables(numberOfTables, maxCapacity) {
   const restaurantId = localStorage.getItem("restaurants_id");
   const restaurant_name = localStorage.getItem("restaurantName");
   try {
@@ -116,6 +116,7 @@ export async function insertTables(numberOfTables) {
 
       newTables.push({
         table_no: formattedTableNo,
+        max_capacity: maxCapacity,
         is_booked: false,
         persons: null,
         qr_image: null,

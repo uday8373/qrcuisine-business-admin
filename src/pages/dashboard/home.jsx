@@ -314,36 +314,39 @@ export function Home() {
         returningUsers: 0,
       });
 
-      const deviceTokenCountMap = new Map();
+      const globalDeviceTokenSet = new Set(); // To track tokens globally
+      const dailyDeviceTokenMap = new Map(); // To track tokens per day
 
       userChartResponse.forEach((item) => {
         const dateKey = moment(item.created_at).format(timeFormat);
-        if (userChartDataMap[dateKey]) {
-          const token = item.deviceToken;
-          if (!deviceTokenCountMap.has(token)) {
-            deviceTokenCountMap.set(token, 0);
+        const token = item.deviceToken;
+
+        if (!dailyDeviceTokenMap.has(dateKey)) {
+          dailyDeviceTokenMap.set(dateKey, new Set());
+        }
+
+        const dailyTokenSet = dailyDeviceTokenMap.get(dateKey);
+
+        // Only count the device token if it hasn't been counted on this day yet
+        if (!dailyTokenSet.has(token)) {
+          dailyTokenSet.add(token); // Mark this token as counted for this day
+
+          if (userChartDataMap[dateKey]) {
+            userChartDataMap[dateKey].totalUsers++;
+
+            // If the token has been seen globally before, it's a returning user
+            if (globalDeviceTokenSet.has(token)) {
+              userChartDataMap[dateKey].returningUsers++;
+            } else {
+              // If it's the first time seeing this token globally, it's a new user
+              userChartDataMap[dateKey].newUsers++;
+              globalDeviceTokenSet.add(token); // Mark this token as seen globally
+            }
           }
-          deviceTokenCountMap.set(token, deviceTokenCountMap.get(token) + 1);
         }
       });
 
-      deviceTokenCountMap.forEach((count, token) => {
-        userChartResponse.forEach((item) => {
-          if (item.deviceToken === token) {
-            const dateKey = moment(item.created_at).format(timeFormat);
-            if (userChartDataMap[dateKey]) {
-              userChartDataMap[dateKey].totalUsers++;
-              if (count === 1) {
-                userChartDataMap[dateKey].newUsers++;
-              } else {
-                userChartDataMap[dateKey].returningUsers++;
-              }
-            }
-          }
-        });
-      });
-
-      // Prepare user chart data
+      // Prepare the final user chart data
       const userChartData = dataKeys.map((key) => ({
         label: key,
         totalUsers: userChartDataMap[key].totalUsers,
@@ -519,7 +522,7 @@ export function Home() {
       <div className="mb-8 grid gap-y-6 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
         <StatisticsCard
           color="gray"
-          value={`${WEB_CONFIG?.currencySymbol} ${orderTotalAmount.toFixed(2)}`}
+          value={`${WEB_CONFIG?.currencySymbol}${orderTotalAmount.toFixed(2)}`}
           title={`${getTitlePrefixByTab(selectedTab)} Sales`}
           icon={React.createElement(BanknotesIcon, {
             className: "w-6 h-6 text-white",

@@ -224,7 +224,7 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
                       variant="paragraph"
                       color="blue-gray"
                       className="font-normal">
-                      {WEB_CONFIG?.currencySymbol}{" "}
+                      {WEB_CONFIG?.currencySymbol}
                       {(food?.price * food?.quantity).toFixed(2)}
                     </Typography>
                   </div>
@@ -298,7 +298,8 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             Subtotal
           </Typography>
           <Typography variant="paragraph" color="blue-gray" className="font-normal">
-            {WEB_CONFIG?.currencySymbol} {selectedData?.total_amount.toFixed(2)}
+            {WEB_CONFIG?.currencySymbol}
+            {selectedData?.total_amount.toFixed(2)}
           </Typography>
         </div>
         <div className="flex justify-between gap-3">
@@ -306,7 +307,8 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             GST
           </Typography>
           <Typography variant="paragraph" color="blue-gray" className="font-normal">
-            {WEB_CONFIG?.currencySymbol} {selectedData?.tax_amount.toFixed(2)}
+            {WEB_CONFIG?.currencySymbol}
+            {selectedData?.tax_amount.toFixed(2)}
           </Typography>
         </div>
         <div className="flex justify-between gap-3">
@@ -314,7 +316,8 @@ export function ViewOrderDrawer({closeDrawer, open, selectedData, toggleDrawer})
             Total
           </Typography>
           <Typography variant="lead" color="green" className="font-semibold">
-            {WEB_CONFIG?.currencySymbol} {selectedData?.grand_amount.toFixed(2)}
+            {WEB_CONFIG?.currencySymbol}
+            {selectedData?.grand_amount.toFixed(2)}
           </Typography>
         </div>
       </div>
